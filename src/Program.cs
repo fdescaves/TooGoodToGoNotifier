@@ -28,6 +28,11 @@ namespace TooGoodToGoNotifier
             .ConfigureAppConfiguration((hostingContext, configuration) =>
             {
                 configuration.AddJsonFile("appsettings.json", optional: false);
+
+                if (hostingContext.HostingEnvironment.IsDevelopment())
+                {
+                    configuration.AddUserSecrets<AuthenticationOptions>();
+                }
             })
             .ConfigureLogging((hostingContext, logging) =>
             {
@@ -38,6 +43,7 @@ namespace TooGoodToGoNotifier
                 services.AddLogging()
                 .Configure<ApiOptions>(host.Configuration.GetSection(nameof(ApiOptions)))
                 .Configure<WatcherOptions>(host.Configuration.GetSection(nameof(WatcherOptions)))
+                .Configure<AuthenticationOptions>(host.Configuration.GetSection(nameof(AuthenticationOptions)))
                 .AddSingleton<IRestClient, RestClient>(serviceProvider => GetRestClientInstance())
                 .AddSingleton<ITooGoodToGoApiService, TooGoodToGoApiService>()
                 .AddSingleton<IEmailNotifier, EmailNotifier>()

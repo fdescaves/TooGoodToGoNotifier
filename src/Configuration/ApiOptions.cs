@@ -7,7 +7,5 @@
         public string AuthenticateEndpoint { get; set; }
 
         public string GetItemsEndpoint { get; set; }
-
-        public AuthenticationOptions AuthenticationOptions { get; set; }
     }
 }

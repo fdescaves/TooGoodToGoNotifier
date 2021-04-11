@@ -1,0 +1,10 @@
+{
+  "profiles": {
+    "TooGoodToGoNotifier": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "DOTNET_ENVIRONMENT": "Development"
+      }
+    }
+  }
+}

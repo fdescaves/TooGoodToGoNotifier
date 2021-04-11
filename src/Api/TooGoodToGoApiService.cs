@@ -1,5 +1,4 @@
 ﻿using System.Security.Authentication;
-using System.Text.Json;
 using Microsoft.Extensions.Options;
 using RestSharp;
 using TooGoodToGoNotifier.Api.Requests;
@@ -13,10 +12,12 @@ namespace TooGoodToGoNotifier.Api
     {
         private readonly IRestClient _restClient;
         private readonly ApiOptions _apiOptions;
+        private readonly AuthenticationOptions _authenticationOptions;
 
-        public TooGoodToGoApiService(IOptions<ApiOptions> options, IRestClient restClient)
+        public TooGoodToGoApiService(IOptions<ApiOptions> apiOptions, IOptions<AuthenticationOptions> authenticationOptions, IRestClient restClient)
         {
-            _apiOptions = options.Value;
+            _apiOptions = apiOptions.Value;
+            _authenticationOptions = authenticationOptions.Value;
             _restClient = restClient;
         }
 
@@ -28,8 +29,8 @@ namespace TooGoodToGoNotifier.Api
             var authenticationRequest = new AuthenticationRequest
             {
                 DeviceType = "ANDROID",
-                Email = _apiOptions.AuthenticationOptions.Email,
-                Password = _apiOptions.AuthenticationOptions.Password
+                Email = _authenticationOptions.Email,
+                Password = _authenticationOptions.Password
             };
 
             request.AddJsonBody(authenticationRequest);
