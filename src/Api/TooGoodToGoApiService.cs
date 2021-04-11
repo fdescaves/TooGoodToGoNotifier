@@ -32,7 +32,7 @@ namespace TooGoodToGoNotifier.Api
                 Password = _apiOptions.AuthenticationOptions.Password
             };
 
-            request.AddJsonBody(JsonSerializer.Serialize(authenticationRequest));
+            request.AddJsonBody(authenticationRequest);
 
             var response = _restClient.Execute<AuthenticationResponse>(request);
 
@@ -70,7 +70,7 @@ namespace TooGoodToGoNotifier.Api
                 WithStockOnly = false
             };
 
-            request.AddJsonBody(JsonSerializer.Serialize(getFavoriteBasketsRequest));
+            request.AddJsonBody(getFavoriteBasketsRequest);
 
             var response = _restClient.Execute<GetBasketsResponse>(request);
 
