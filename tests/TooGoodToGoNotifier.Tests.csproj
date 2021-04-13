@@ -15,7 +15,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\TooGoodToGoNotifier.csproj" />
+    <ProjectReference Include="..\src\TooGoodToGoNotifier.csproj" />
   </ItemGroup>
 
 </Project>

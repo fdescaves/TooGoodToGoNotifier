@@ -5,7 +5,7 @@ VisualStudioVersion = 16.0.31112.23
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TooGoodToGoNotifier", "src\TooGoodToGoNotifier.csproj", "{D8BCC3AA-0364-4430-B624-0AA74026768E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TooGoodToGoNotifier.Tests", "tests\TooGoodToGoNotifier.Tests\TooGoodToGoNotifier.Tests.csproj", "{026A5765-B085-4C3A-883B-9045B7E5C212}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TooGoodToGoNotifier.Tests", "tests\TooGoodToGoNotifier.Tests.csproj", "{026A5765-B085-4C3A-883B-9045B7E5C212}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
