@@ -1,4 +1,5 @@
 ﻿using System.Security.Authentication;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using RestSharp;
 using TooGoodToGoNotifier.Api.Requests;
@@ -10,12 +11,14 @@ namespace TooGoodToGoNotifier.Api
 {
     public class TooGoodToGoApiService : ITooGoodToGoApiService
     {
+        private readonly ILogger _logger;
         private readonly IRestClient _restClient;
         private readonly ApiOptions _apiOptions;
         private readonly AuthenticationOptions _authenticationOptions;
 
-        public TooGoodToGoApiService(IOptions<ApiOptions> apiOptions, IOptions<AuthenticationOptions> authenticationOptions, IRestClient restClient)
+        public TooGoodToGoApiService(ILogger<TooGoodToGoApiService> logger, IOptions<ApiOptions> apiOptions, IOptions<AuthenticationOptions> authenticationOptions, IRestClient restClient)
         {
+            _logger = logger;
             _apiOptions = apiOptions.Value;
             _authenticationOptions = authenticationOptions.Value;
             _restClient = restClient;

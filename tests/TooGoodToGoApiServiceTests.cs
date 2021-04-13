@@ -1,4 +1,5 @@
 ﻿using System.Security.Authentication;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
@@ -12,6 +13,7 @@ namespace TooGoodToGoNotifier.Tests
     [TestFixture]
     public class TooGoodToGoApiServiceTests
     {
+        private Mock<ILogger<TooGoodToGoApiService>> _loggerMock;
         private IOptions<ApiOptions> _apiOptions;
         private IOptions<AuthenticationOptions> _authenticationOptions;
         private Mock<IRestClient> _restClientMock;
@@ -20,6 +22,7 @@ namespace TooGoodToGoNotifier.Tests
         [SetUp]
         public void SetUp()
         {
+            _loggerMock = new Mock<ILogger<TooGoodToGoApiService>>();
             _apiOptions = Options.Create(new ApiOptions());
             _authenticationOptions = Options.Create(new AuthenticationOptions());
             _restClientMock = new Mock<IRestClient>();
@@ -44,7 +47,7 @@ namespace TooGoodToGoNotifier.Tests
             restResponseMock.Setup(x => x.IsSuccessful).Returns(false);
             _restClientMock.Setup(x => x.Execute<AuthenticationResponse>(It.IsAny<IRestRequest>())).Returns(restResponseMock.Object);
 
-            var service = new TooGoodToGoApiService(_apiOptions, _authenticationOptions, _restClientMock.Object);
+            var service = new TooGoodToGoApiService(_loggerMock.Object, _apiOptions, _authenticationOptions, _restClientMock.Object);
 
             Assert.Throws<AuthenticationException>(() => service.Authenticate());
         }
@@ -60,7 +63,7 @@ namespace TooGoodToGoNotifier.Tests
             restResponseMock.Setup(x => x.Data).Returns(_authenticationResponse);
             _restClientMock.Setup(x => x.Execute<AuthenticationResponse>(It.IsAny<IRestRequest>())).Returns(restResponseMock.Object);
 
-            var service = new TooGoodToGoApiService(_apiOptions, _authenticationOptions, _restClientMock.Object);
+            var service = new TooGoodToGoApiService(_loggerMock.Object, _apiOptions, _authenticationOptions, _restClientMock.Object);
             service.Authenticate();
 
             _restClientMock.Verify(x => x.Execute<AuthenticationResponse>(It.Is<IRestRequest>(r => r.Resource == $"{_apiOptions.Value.BaseUrl}{_apiOptions.Value.AuthenticateEndpoint}" && r.Method == Method.POST)));
@@ -75,7 +78,7 @@ namespace TooGoodToGoNotifier.Tests
 
             _restClientMock.Setup(x => x.Execute<AuthenticationResponse>(It.IsAny<IRestRequest>())).Returns(restResponseMock.Object);
 
-            var service = new TooGoodToGoApiService(_apiOptions, _authenticationOptions, _restClientMock.Object);
+            var service = new TooGoodToGoApiService(_loggerMock.Object, _apiOptions, _authenticationOptions, _restClientMock.Object);
             var authenticationContext = service.Authenticate();
 
             Assert.AreEqual(_authenticationResponse.AccessToken, authenticationContext.AccessToken);
