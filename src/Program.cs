@@ -5,6 +5,8 @@ using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
+using NLog;
+using NLog.Extensions.Logging;
 using RestSharp;
 using RestSharp.Serializers.NewtonsoftJson;
 using TooGoodToGoNotifier.Api;
@@ -33,10 +35,15 @@ namespace TooGoodToGoNotifier
                 {
                     configuration.AddUserSecrets<AuthenticationOptions>();
                 }
+
+                var config = configuration.Build();
+                LogManager.Setup().LoadConfigurationFromSection(config);
             })
             .ConfigureLogging((hostingContext, logging) =>
             {
-                logging.AddConsole();
+                logging
+                .ClearProviders()
+                .AddNLog();
             })
             .ConfigureServices((host, services) =>
             {

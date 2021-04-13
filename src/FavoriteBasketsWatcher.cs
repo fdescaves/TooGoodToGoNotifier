@@ -38,25 +38,25 @@ namespace TooGoodToGoNotifier
             var basketsToNotify = new List<Basket>();
             foreach (var basket in getBasketsResponse.Items)
             {
-                _logger.LogInformation($"Id: {basket.Item.ItemId} | DisplayName: \"{basket.DisplayName}\" | AvailableItems: {basket.AvailableItems}");
+                _logger.LogDebug($"Id: {basket.Item.ItemId} | DisplayName: \"{basket.DisplayName}\" | AvailableItems: {basket.AvailableItems}");
 
                 if (_notifiedBaskets.TryGetValue(basket.Item.ItemId, out var isAlreadyNotified))
                 {
                     if (basket.AvailableItems > 0 && !isAlreadyNotified)
                     {
-                        _logger.LogInformation($"Basket N°{basket.Item.ItemId} restock will be notified.");
+                        _logger.LogDebug($"Basket N°{basket.Item.ItemId} restock will be notified.");
                         basketsToNotify.Add(basket);
                         _notifiedBaskets[basket.Item.ItemId] = true;
                     }
                     else if (basket.AvailableItems == 0 && isAlreadyNotified)
                     {
-                        _logger.LogInformation($"Basket N°{basket.Item.ItemId} was previously notified and is now out of stock, notification will be reset.");
+                        _logger.LogDebug($"Basket N°{basket.Item.ItemId} was previously notified and is now out of stock, notification will be reset.");
                         _notifiedBaskets[basket.Item.ItemId] = false;
                     }
                 }
                 else if (basket.AvailableItems > 0)
                 {
-                    _logger.LogInformation($"Basket N°{basket.Item.ItemId} is available for the first time, it will be notified.");
+                    _logger.LogDebug($"Basket N°{basket.Item.ItemId} is available for the first time, it will be notified.");
                     basketsToNotify.Add(basket);
                     _notifiedBaskets.Add(basket.Item.ItemId, true);
                 }
