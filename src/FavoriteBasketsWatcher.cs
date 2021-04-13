@@ -1,35 +1,27 @@
 ﻿using System.Collections.Generic;
 using System.Timers;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using TooGoodToGoNotifier.Api;
 using TooGoodToGoNotifier.Api.Responses;
-using TooGoodToGoNotifier.Configuration;
 
 namespace TooGoodToGoNotifier
 {
     public class FavoriteBasketsWatcher
     {
         private readonly ILogger _logger;
-        private readonly WatcherOptions _watcherOptions;
         private readonly ITooGoodToGoApiService _tooGoodToGoApiService;
         private readonly IEmailNotifier _emailNotifier;
-        private readonly Timer _timer;
+        private readonly ITimer _timer;
         private readonly Dictionary<int, bool> _notifiedBaskets = new();
 
         private AuthenticationContext _authenticationContext;
 
-        public FavoriteBasketsWatcher(ILogger<FavoriteBasketsWatcher> logger, IOptions<WatcherOptions> options, ITooGoodToGoApiService tooGoodToGoApiService, IEmailNotifier emailNotifier)
+        public FavoriteBasketsWatcher(ILogger<FavoriteBasketsWatcher> logger, ITimer timer, ITooGoodToGoApiService tooGoodToGoApiService, IEmailNotifier emailNotifier)
         {
             _logger = logger;
-            _watcherOptions = options.Value;
             _tooGoodToGoApiService = tooGoodToGoApiService;
             _emailNotifier = emailNotifier;
-            _timer = new Timer
-            {
-                Interval = _watcherOptions.DelayBetweenCalls,
-                AutoReset = false
-            };
+            _timer = timer;
             _timer.Elapsed += OnTimerElapsed;
         }
 

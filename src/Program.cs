@@ -40,10 +40,11 @@ namespace TooGoodToGoNotifier
             })
             .ConfigureServices((host, services) =>
             {
+                var timerOptions = host.Configuration.GetSection(nameof(TimerOptions)).Get<TimerOptions>();
                 services.AddLogging()
                 .Configure<ApiOptions>(host.Configuration.GetSection(nameof(ApiOptions)))
-                .Configure<WatcherOptions>(host.Configuration.GetSection(nameof(WatcherOptions)))
                 .Configure<AuthenticationOptions>(host.Configuration.GetSection(nameof(AuthenticationOptions)))
+                .AddSingleton<ITimer, TooGoodToGoTimer>(serviceProvider => new TooGoodToGoTimer { AutoReset = false, Interval = timerOptions.Interval })
                 .AddSingleton<IRestClient, RestClient>(serviceProvider => GetRestClientInstance())
                 .AddSingleton<ITooGoodToGoApiService, TooGoodToGoApiService>()
                 .AddSingleton<IEmailNotifier, EmailNotifier>()
