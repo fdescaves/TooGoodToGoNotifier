@@ -1,5 +1,5 @@
-﻿using System.Collections.Generic;
-using System.Timers;
+﻿using System;
+using System.Collections.Generic;
 using Microsoft.Extensions.Logging;
 using TooGoodToGoNotifier.Api;
 using TooGoodToGoNotifier.Api.Responses;
@@ -22,52 +22,70 @@ namespace TooGoodToGoNotifier
             _tooGoodToGoApiService = tooGoodToGoApiService;
             _emailNotifier = emailNotifier;
             _timer = timer;
-            _timer.Elapsed += OnTimerElapsed;
+
+            // Async is used to rethrow exceptions instead of letting System.Timers.Timer suppress them.
+            _timer.Elapsed += async (sender, args) => WatchForAvailableFavoriteBaskets();
         }
 
         public void Start()
         {
-            _authenticationContext = _tooGoodToGoApiService.Authenticate();
             _timer.Start();
         }
 
-        private void OnTimerElapsed(object sender, ElapsedEventArgs e)
+        private void WatchForAvailableFavoriteBaskets()
         {
-            var getBasketsResponse = _tooGoodToGoApiService.GetFavoriteBaskets(_authenticationContext.AccessToken, _authenticationContext.UserId);
-
-            var basketsToNotify = new List<Basket>();
-            foreach (var basket in getBasketsResponse.Items)
+            try
             {
-                _logger.LogDebug($"Id: {basket.Item.ItemId} | DisplayName: \"{basket.DisplayName}\" | AvailableItems: {basket.AvailableItems}");
+                _logger.LogDebug($"{nameof(WatchForAvailableFavoriteBaskets)}");
 
-                if (_notifiedBaskets.TryGetValue(basket.Item.ItemId, out var isAlreadyNotified))
+                if (_authenticationContext == null)
                 {
-                    if (basket.AvailableItems > 0 && !isAlreadyNotified)
+                    _logger.LogDebug($"Authentication context is null => Authenticate");
+                    _authenticationContext = _tooGoodToGoApiService.Authenticate();
+                }
+
+                var getBasketsResponse = _tooGoodToGoApiService.GetFavoriteBaskets(_authenticationContext.AccessToken, _authenticationContext.UserId);
+
+                var basketsToNotify = new List<Basket>();
+                foreach (var basket in getBasketsResponse.Items)
+                {
+                    _logger.LogDebug($"Basket N°{basket.Item.ItemId} | DisplayName: \"{basket.DisplayName}\" | AvailableItems: {basket.AvailableItems}");
+
+                    if (_notifiedBaskets.TryGetValue(basket.Item.ItemId, out var isAlreadyNotified))
                     {
-                        _logger.LogDebug($"Basket N°{basket.Item.ItemId} restock will be notified.");
+                        if (basket.AvailableItems > 0 && !isAlreadyNotified)
+                        {
+                            _logger.LogDebug($"Basket N°{basket.Item.ItemId} restock will be notified.");
+                            basketsToNotify.Add(basket);
+                            _notifiedBaskets[basket.Item.ItemId] = true;
+                        }
+                        else if (basket.AvailableItems == 0 && isAlreadyNotified)
+                        {
+                            _logger.LogDebug($"Basket N°{basket.Item.ItemId} was previously notified and is now out of stock, notification will be reset.");
+                            _notifiedBaskets[basket.Item.ItemId] = false;
+                        }
+                    }
+                    else if (basket.AvailableItems > 0)
+                    {
+                        _logger.LogDebug($"Basket N°{basket.Item.ItemId} is available for the first time, it will be notified.");
                         basketsToNotify.Add(basket);
-                        _notifiedBaskets[basket.Item.ItemId] = true;
-                    }
-                    else if (basket.AvailableItems == 0 && isAlreadyNotified)
-                    {
-                        _logger.LogDebug($"Basket N°{basket.Item.ItemId} was previously notified and is now out of stock, notification will be reset.");
-                        _notifiedBaskets[basket.Item.ItemId] = false;
+                        _notifiedBaskets.Add(basket.Item.ItemId, true);
                     }
                 }
-                else if (basket.AvailableItems > 0)
+
+                if (basketsToNotify.Count > 0)
                 {
-                    _logger.LogDebug($"Basket N°{basket.Item.ItemId} is available for the first time, it will be notified.");
-                    basketsToNotify.Add(basket);
-                    _notifiedBaskets.Add(basket.Item.ItemId, true);
+                    _emailNotifier.Notify(basketsToNotify);
                 }
-            }
 
-            if (basketsToNotify.Count > 0)
+                // Restart timer
+                _timer.Start();
+            }
+            catch (Exception e)
             {
-                _emailNotifier.Notify(basketsToNotify);
+                _logger.LogError(e, e.Message);
+                throw;
             }
-
-            _timer.Start();
         }
     }
 }
