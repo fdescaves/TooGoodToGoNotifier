@@ -33,15 +33,6 @@ namespace TooGoodToGoNotifier.Tests
         }
 
         [Test]
-        public void Start_Should_AuthenticateOnce()
-        {
-            var favoriteBasketsWatcher = new FavoriteBasketsWatcher(_loggerMock.Object, _timerMock.Object, _tooGoodToGoApiServiceMock.Object, _emailNotifierMock.Object);
-            favoriteBasketsWatcher.Start();
-
-            _tooGoodToGoApiServiceMock.Verify(x => x.Authenticate(), Times.Once);
-        }
-
-        [Test]
         public void Start_Should_StartTimer()
         {
             var favoriteBasketsWatcher = new FavoriteBasketsWatcher(_loggerMock.Object, _timerMock.Object, _tooGoodToGoApiServiceMock.Object, _emailNotifierMock.Object);
