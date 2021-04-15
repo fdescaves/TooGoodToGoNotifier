@@ -1,4 +1,4 @@
-﻿using System.Threading.Tasks;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -29,13 +29,6 @@ namespace TooGoodToGoNotifier
         private static IHostBuilder CreateHostBuilder(string[] args) => Host.CreateDefaultBuilder(args)
             .ConfigureAppConfiguration((hostingContext, configuration) =>
             {
-                configuration.AddJsonFile("appsettings.json", optional: false);
-
-                if (hostingContext.HostingEnvironment.IsDevelopment())
-                {
-                    configuration.AddUserSecrets<AuthenticationOptions>();
-                }
-
                 var config = configuration.Build();
                 LogManager.Setup().LoadConfigurationFromSection(config);
             })
