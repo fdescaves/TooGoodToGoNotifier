@@ -1,8 +1,10 @@
-using System.Threading.Tasks;
+﻿using Coravel;
+using Coravel.Scheduling.Schedule.Interfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using NLog;
@@ -16,14 +18,25 @@ namespace TooGoodToGoNotifier
 {
     public class Program
     {
-        private static async Task Main(string[] args)
+        private static void Main(string[] args)
         {
             using IHost host = CreateHostBuilder(args).Build();
 
-            var favoriteBasketsWatcher = host.Services.GetRequiredService<FavoriteBasketsWatcher>();
-            favoriteBasketsWatcher.Start();
+            host.Services.UseScheduler(scheduler =>
+            {
+                var schedulerOptions = host.Services.GetService<IOptions<SchedulerOptions>>().Value;
+                scheduler
+                .Schedule<FavoriteBasketsWatcher>()
+                .EverySeconds(schedulerOptions.Interval)
+                .PreventOverlapping(nameof(FavoriteBasketsWatcher));
+            })
+            .LogScheduledTaskProgress(host.Services.GetService<ILogger<IScheduler>>())
+            .OnError((_) =>
+            {
+                host.StopAsync();
+            });
 
-            await host.RunAsync();
+            host.Run();
         }
 
         private static IHostBuilder CreateHostBuilder(string[] args) => Host.CreateDefaultBuilder(args)
@@ -40,11 +53,12 @@ namespace TooGoodToGoNotifier
             })
             .ConfigureServices((host, services) =>
             {
-                var timerOptions = host.Configuration.GetSection(nameof(TimerOptions)).Get<TimerOptions>();
+                var timerOptions = host.Configuration.GetSection(nameof(SchedulerOptions)).Get<SchedulerOptions>();
                 services.AddLogging()
+                .AddScheduler()
+                .Configure<SchedulerOptions>(host.Configuration.GetSection(nameof(SchedulerOptions)))
                 .Configure<ApiOptions>(host.Configuration.GetSection(nameof(ApiOptions)))
                 .Configure<AuthenticationOptions>(host.Configuration.GetSection(nameof(AuthenticationOptions)))
-                .AddSingleton<ITimer, TooGoodToGoTimer>(serviceProvider => new TooGoodToGoTimer { AutoReset = false, Interval = timerOptions.Interval })
                 .AddSingleton<IRestClient, RestClient>(serviceProvider => GetRestClientInstance())
                 .AddSingleton<ITooGoodToGoApiService, TooGoodToGoApiService>()
                 .AddSingleton<IEmailNotifier, EmailNotifier>()

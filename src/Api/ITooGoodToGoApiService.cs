@@ -1,11 +1,12 @@
-﻿using TooGoodToGoNotifier.Api.Responses;
+﻿using System.Threading.Tasks;
+using TooGoodToGoNotifier.Api.Responses;
 
 namespace TooGoodToGoNotifier.Api
 {
     public interface ITooGoodToGoApiService
     {
-        public AuthenticationContext Authenticate();
+        public Task<AuthenticationContext> Authenticate();
 
-        public GetBasketsResponse GetFavoriteBaskets(string accessToken, int userId);
+        public Task<GetBasketsResponse> GetFavoriteBaskets(string accessToken, int userId);
     }
 }

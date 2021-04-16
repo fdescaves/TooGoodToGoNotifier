@@ -1,6 +1,6 @@
 ﻿namespace TooGoodToGoNotifier.Configuration
 {
-    public class TimerOptions
+    public class SchedulerOptions
     {
         public int Interval { get; set; }
     }

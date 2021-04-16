@@ -1,5 +1,4 @@
-﻿using System.Security.Authentication;
-using Microsoft.Extensions.Logging;
+﻿using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using RestSharp;
 using TooGoodToGoNotifier.Api.Requests;
@@ -11,20 +10,18 @@ namespace TooGoodToGoNotifier.Api
 {
     public class TooGoodToGoApiService : ITooGoodToGoApiService
     {
-        private readonly ILogger _logger;
         private readonly IRestClient _restClient;
         private readonly ApiOptions _apiOptions;
         private readonly AuthenticationOptions _authenticationOptions;
 
-        public TooGoodToGoApiService(ILogger<TooGoodToGoApiService> logger, IOptions<ApiOptions> apiOptions, IOptions<AuthenticationOptions> authenticationOptions, IRestClient restClient)
+        public TooGoodToGoApiService(IOptions<ApiOptions> apiOptions, IOptions<AuthenticationOptions> authenticationOptions, IRestClient restClient)
         {
-            _logger = logger;
             _apiOptions = apiOptions.Value;
             _authenticationOptions = authenticationOptions.Value;
             _restClient = restClient;
         }
 
-        public AuthenticationContext Authenticate()
+        public async Task<AuthenticationContext> Authenticate()
         {
             var request = new RestRequest($"{_apiOptions.BaseUrl}{_apiOptions.AuthenticateEndpoint}", Method.POST);
             request.AddHeader("Content-Type", "application/json");
@@ -38,11 +35,11 @@ namespace TooGoodToGoNotifier.Api
 
             request.AddJsonBody(authenticationRequest);
 
-            var response = _restClient.Execute<AuthenticationResponse>(request);
+            var response = await _restClient.ExecuteAsync<AuthenticationResponse>(request);
 
             if (!response.IsSuccessful)
             {
-                throw new AuthenticationException(response.Content);
+                throw new TooGoodToGoRequestException(response.Content);
             }
 
             return new AuthenticationContext
@@ -53,7 +50,7 @@ namespace TooGoodToGoNotifier.Api
             };
         }
 
-        public GetBasketsResponse GetFavoriteBaskets(string accessToken, int userId)
+        public async Task<GetBasketsResponse> GetFavoriteBaskets(string accessToken, int userId)
         {
             var request = new RestRequest($"{_apiOptions.BaseUrl}{_apiOptions.GetItemsEndpoint}", Method.POST);
             request.AddHeader("Content-Type", "application/json");
@@ -76,7 +73,12 @@ namespace TooGoodToGoNotifier.Api
 
             request.AddJsonBody(getFavoriteBasketsRequest);
 
-            var response = _restClient.Execute<GetBasketsResponse>(request);
+            var response = await _restClient.ExecuteAsync<GetBasketsResponse>(request);
+
+            if (!response.IsSuccessful)
+            {
+                throw new TooGoodToGoRequestException(response.Content);
+            }
 
             return response.Data;
         }

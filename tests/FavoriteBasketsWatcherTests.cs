@@ -1,5 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Moq;
 using NUnit.Framework;
@@ -12,81 +12,19 @@ namespace TooGoodToGoNotifier.Tests
     public class FavoriteBasketsWatcherTests
     {
         private Mock<ILogger<FavoriteBasketsWatcher>> _loggerMock;
-        private Mock<ITimer> _timerMock;
         private Mock<ITooGoodToGoApiService> _tooGoodToGoApiServiceMock;
         private Mock<IEmailNotifier> _emailNotifierMock;
-        private AuthenticationContext _authenticationContext;
 
         [SetUp]
         public void SetUp()
         {
             _loggerMock = new Mock<ILogger<FavoriteBasketsWatcher>>();
-            _timerMock = new Mock<ITimer>();
             _tooGoodToGoApiServiceMock = new Mock<ITooGoodToGoApiService>();
             _emailNotifierMock = new Mock<IEmailNotifier>();
-            _authenticationContext = new AuthenticationContext
-            {
-                AccessToken = "foo",
-                RefreshToken = "bar",
-                UserId = 1
-            };
         }
 
         [Test]
-        public void Start_Should_StartTimer()
-        {
-            var favoriteBasketsWatcher = new FavoriteBasketsWatcher(_loggerMock.Object, _timerMock.Object, _tooGoodToGoApiServiceMock.Object, _emailNotifierMock.Object);
-            favoriteBasketsWatcher.Start();
-
-            _timerMock.Verify(x => x.Start(), Times.Once);
-        }
-
-        [Test]
-        public void FavoriteBasketsWatcher_When_TimeIsElapsed_Should_CallGetFavoriteBaskets_And_StartTimer()
-        {
-            var getBasketsResponse = new GetBasketsResponse
-            {
-                Items = new List<Basket>()
-            };
-
-            _tooGoodToGoApiServiceMock.Setup(x => x.Authenticate()).Returns(_authenticationContext);
-            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<string>(), It.IsAny<int>())).Returns(getBasketsResponse);
-
-            var favoriteBasketsWatcher = new FavoriteBasketsWatcher(_loggerMock.Object, _timerMock.Object, _tooGoodToGoApiServiceMock.Object, _emailNotifierMock.Object);
-            favoriteBasketsWatcher.Start();
-
-            _timerMock.Raise(x => x.Elapsed += null, (EventArgs)null);
-
-            _tooGoodToGoApiServiceMock.Verify(x => x.GetFavoriteBaskets(It.IsAny<string>(), It.IsAny<int>()), Times.Once);
-            _timerMock.Verify(x => x.Start(), Times.Exactly(2));
-
-            _timerMock.Raise(x => x.Elapsed += null, (EventArgs)null);
-
-            _tooGoodToGoApiServiceMock.Verify(x => x.GetFavoriteBaskets(It.IsAny<string>(), It.IsAny<int>()), Times.Exactly(2));
-            _timerMock.Verify(x => x.Start(), Times.Exactly(3));
-        }
-
-        [Test]
-        public void FavoriteBasketsWatcher_Should_CallGetFavoriteBasketsWithAuthenticationContextData()
-        {
-            var getBasketsResponse = new GetBasketsResponse
-            {
-                Items = new List<Basket>()
-            };
-
-            _tooGoodToGoApiServiceMock.Setup(x => x.Authenticate()).Returns(_authenticationContext);
-            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<string>(), It.IsAny<int>())).Returns(getBasketsResponse);
-
-            var favoriteBasketsWatcher = new FavoriteBasketsWatcher(_loggerMock.Object, _timerMock.Object, _tooGoodToGoApiServiceMock.Object, _emailNotifierMock.Object);
-            favoriteBasketsWatcher.Start();
-
-            _timerMock.Raise(x => x.Elapsed += null, (EventArgs)null);
-
-            _tooGoodToGoApiServiceMock.Verify(x => x.GetFavoriteBaskets(_authenticationContext.AccessToken, _authenticationContext.UserId), Times.Once);
-        }
-
-        [Test]
-        public void FavoriteBasketsWatcher_When_OneBasketIsAvailableAndAnotherIsNot_Should_OnlyNotifyAvailableBasket()
+        public async Task FavoriteBasketsWatcher_When_OneBasketIsAvailableAndAnotherIsNot_Should_OnlyNotifyAvailableBasket()
         {
             var getBasketsResponse = new GetBasketsResponse
             {
@@ -113,20 +51,18 @@ namespace TooGoodToGoNotifier.Tests
                 }
             };
 
-            _tooGoodToGoApiServiceMock.Setup(x => x.Authenticate()).Returns(_authenticationContext);
-            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<string>(), It.IsAny<int>())).Returns(getBasketsResponse);
+            _tooGoodToGoApiServiceMock.Setup(x => x.Authenticate()).Returns(Task.FromResult(GetAuthenticationContext()));
+            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<string>(), It.IsAny<int>())).Returns(Task.FromResult(getBasketsResponse));
 
-            var favoriteBasketsWatcher = new FavoriteBasketsWatcher(_loggerMock.Object, _timerMock.Object, _tooGoodToGoApiServiceMock.Object, _emailNotifierMock.Object);
-            favoriteBasketsWatcher.Start();
-
-            _timerMock.Raise(x => x.Elapsed += null, (EventArgs)null);
+            var favoriteBasketsWatcher = new FavoriteBasketsWatcher(_loggerMock.Object, _tooGoodToGoApiServiceMock.Object, _emailNotifierMock.Object);
+            await favoriteBasketsWatcher.Invoke();
 
             // Only one basket should have been notified, the basket N°1 that has 1 available item.
             _emailNotifierMock.Verify(x => x.Notify(It.Is<List<Basket>>(x => x.Count == 1 && x[0].Item.ItemId == 1)), Times.Once);
         }
 
         [Test]
-        public void FavoriteBasketsWatcher_When_BasketIsSeenTwoTimesAsAvailable_Should_NotifyOnce()
+        public async Task FavoriteBasketsWatcher_When_BasketIsSeenTwoTimesAsAvailable_Should_NotifyOnce()
         {
             var getBasketsResponse = new GetBasketsResponse
             {
@@ -144,41 +80,36 @@ namespace TooGoodToGoNotifier.Tests
                 }
             };
 
-            _tooGoodToGoApiServiceMock.Setup(x => x.Authenticate()).Returns(_authenticationContext);
-            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<string>(), It.IsAny<int>())).Returns(getBasketsResponse);
+            _tooGoodToGoApiServiceMock.Setup(x => x.Authenticate()).Returns(Task.FromResult(GetAuthenticationContext()));
+            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<string>(), It.IsAny<int>())).Returns(Task.FromResult(getBasketsResponse));
 
-            var favoriteBasketsWatcher = new FavoriteBasketsWatcher(_loggerMock.Object, _timerMock.Object, _tooGoodToGoApiServiceMock.Object, _emailNotifierMock.Object);
-            favoriteBasketsWatcher.Start();
-
-            _timerMock.Raise(x => x.Elapsed += null, (EventArgs)null);
-            _timerMock.Raise(x => x.Elapsed += null, (EventArgs)null);
+            var favoriteBasketsWatcher = new FavoriteBasketsWatcher(_loggerMock.Object, _tooGoodToGoApiServiceMock.Object, _emailNotifierMock.Object);
+            await favoriteBasketsWatcher.Invoke();
 
             // Notify should have been called only once.
             _emailNotifierMock.Verify(x => x.Notify(It.Is<List<Basket>>(x => x.Count == 1 && x[0].Item.ItemId == 1)), Times.Once);
         }
 
         [Test]
-        public void FavoriteBasketsWatcher_When_BasketIsSeenAsAvailable_Then_SeenAsNotAvailable_Then_SeenAsAvailable_Should_NotifyTwice()
+        public async Task FavoriteBasketsWatcher_When_BasketIsSeenAsAvailable_Then_SeenAsNotAvailable_Then_SeenAsAvailable_Should_NotifyTwice()
         {
-            _tooGoodToGoApiServiceMock.Setup(x => x.Authenticate()).Returns(_authenticationContext);
-            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<string>(), It.IsAny<int>())).Returns(GetBasketsResponse(1));
+            _tooGoodToGoApiServiceMock.Setup(x => x.Authenticate()).Returns(Task.FromResult(GetAuthenticationContext()));
+            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<string>(), It.IsAny<int>())).Returns(Task.FromResult(GetBasketsResponse(1)));
 
-            var favoriteBasketsWatcher = new FavoriteBasketsWatcher(_loggerMock.Object, _timerMock.Object, _tooGoodToGoApiServiceMock.Object, _emailNotifierMock.Object);
-            favoriteBasketsWatcher.Start();
-
-            _timerMock.Raise(x => x.Elapsed += null, (EventArgs)null);
+            var favoriteBasketsWatcher = new FavoriteBasketsWatcher(_loggerMock.Object, _tooGoodToGoApiServiceMock.Object, _emailNotifierMock.Object);
+            await favoriteBasketsWatcher.Invoke();
 
             // Notify should be called once.
             _emailNotifierMock.Verify(x => x.Notify(It.Is<List<Basket>>(x => x.Count == 1 && x[0].Item.ItemId == 1)), Times.Once);
 
-            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<string>(), It.IsAny<int>())).Returns(GetBasketsResponse(0));
-            _timerMock.Raise(x => x.Elapsed += null, (EventArgs)null);
+            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<string>(), It.IsAny<int>())).Returns(Task.FromResult(GetBasketsResponse(0)));
+            await favoriteBasketsWatcher.Invoke();
 
             // Notify should still have been called once.
             _emailNotifierMock.Verify(x => x.Notify(It.Is<List<Basket>>(x => x.Count == 1 && x[0].Item.ItemId == 1)), Times.Once);
 
-            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<string>(), It.IsAny<int>())).Returns(GetBasketsResponse(1));
-            _timerMock.Raise(x => x.Elapsed += null, (EventArgs)null);
+            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<string>(), It.IsAny<int>())).Returns(Task.FromResult(GetBasketsResponse(1)));
+            await favoriteBasketsWatcher.Invoke();
 
             // Notify should have been called a second time.
             _emailNotifierMock.Verify(x => x.Notify(It.Is<List<Basket>>(x => x.Count == 1 && x[0].Item.ItemId == 1)), Times.Exactly(2));
@@ -201,6 +132,16 @@ namespace TooGoodToGoNotifier.Tests
                     }
                 };
             }
+        }
+
+        private static AuthenticationContext GetAuthenticationContext()
+        {
+            return new AuthenticationContext
+            {
+                AccessToken = "foo",
+                RefreshToken = "bar",
+                UserId = 1
+            };
         }
     }
 }
