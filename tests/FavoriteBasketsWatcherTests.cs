@@ -33,7 +33,7 @@ namespace TooGoodToGoNotifier.Tests
                     new Basket
                     {
                         DisplayName = "Basket N°1",
-                        AvailableItems = 1,
+                        ItemsAvailable = 1,
                         Item = new Item
                         {
                             ItemId = 1
@@ -42,7 +42,7 @@ namespace TooGoodToGoNotifier.Tests
                     new Basket
                     {
                         DisplayName = "Basket N°2",
-                        AvailableItems = 0,
+                        ItemsAvailable = 0,
                         Item = new Item
                         {
                             ItemId = 2
@@ -71,7 +71,7 @@ namespace TooGoodToGoNotifier.Tests
                     new Basket
                     {
                         DisplayName = "Basket N°1",
-                        AvailableItems = 1,
+                        ItemsAvailable = 1,
                         Item = new Item
                         {
                             ItemId = 1
@@ -123,7 +123,7 @@ namespace TooGoodToGoNotifier.Tests
                         new Basket
                         {
                             DisplayName = "Basket N°1",
-                            AvailableItems = availableItems,
+                            ItemsAvailable = availableItems,
                             Item = new Item
                             {
                                 ItemId = 1

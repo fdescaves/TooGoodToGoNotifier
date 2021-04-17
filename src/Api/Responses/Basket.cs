@@ -6,6 +6,6 @@
 
         public string DisplayName { get; set; }
 
-        public int AvailableItems { get; set; }
+        public int ItemsAvailable { get; set; }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Coravel.Invocable;
 using Microsoft.Extensions.Logging;
@@ -25,11 +26,11 @@ namespace TooGoodToGoNotifier
 
         public async Task Invoke()
         {
-            _logger.LogDebug($"Invoke {nameof(FavoriteBasketsWatcher)}");
+            _logger.LogInformation($"{nameof(FavoriteBasketsWatcher)} started");
 
             if (_authenticationContext == null)
             {
-                _logger.LogDebug($"Authentication context is null => Authenticate");
+                _logger.LogInformation($"Authentication context is null => Authenticate");
                 _authenticationContext = await _tooGoodToGoApiService.Authenticate();
             }
 
@@ -38,23 +39,23 @@ namespace TooGoodToGoNotifier
             var basketsToNotify = new List<Basket>();
             foreach (var basket in getBasketsResponse.Items)
             {
-                _logger.LogDebug($"Basket N°{basket.Item.ItemId} | DisplayName: \"{basket.DisplayName}\" | AvailableItems: {basket.AvailableItems}");
+                _logger.LogDebug($"Basket N°{basket.Item.ItemId} | DisplayName: \"{basket.DisplayName}\" | AvailableItems: {basket.ItemsAvailable}");
 
                 if (_notifiedBaskets.TryGetValue(basket.Item.ItemId, out var isAlreadyNotified))
                 {
-                    if (basket.AvailableItems > 0 && !isAlreadyNotified)
+                    if (basket.ItemsAvailable > 0 && !isAlreadyNotified)
                     {
                         _logger.LogDebug($"Basket N°{basket.Item.ItemId} restock will be notified.");
                         basketsToNotify.Add(basket);
                         _notifiedBaskets[basket.Item.ItemId] = true;
                     }
-                    else if (basket.AvailableItems == 0 && isAlreadyNotified)
+                    else if (basket.ItemsAvailable == 0 && isAlreadyNotified)
                     {
                         _logger.LogDebug($"Basket N°{basket.Item.ItemId} was previously notified and is now out of stock, notification will be reset.");
                         _notifiedBaskets[basket.Item.ItemId] = false;
                     }
                 }
-                else if (basket.AvailableItems > 0)
+                else if (basket.ItemsAvailable > 0)
                 {
                     _logger.LogDebug($"Basket N°{basket.Item.ItemId} is available for the first time, it will be notified.");
                     basketsToNotify.Add(basket);
@@ -64,9 +65,11 @@ namespace TooGoodToGoNotifier
 
             if (basketsToNotify.Count > 0)
             {
+                _logger.LogInformation($"{basketsToNotify.Count} basket(s) will be notified: {string.Join("| ", basketsToNotify.Select(x => x.DisplayName))}");
                 _emailNotifier.Notify(basketsToNotify);
             }
 
+            _logger.LogInformation($"{nameof(FavoriteBasketsWatcher)} ended");
         }
     }
 }

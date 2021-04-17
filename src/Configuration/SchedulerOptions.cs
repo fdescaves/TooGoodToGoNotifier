@@ -2,6 +2,6 @@
 {
     public class SchedulerOptions
     {
-        public int Interval { get; set; }
+        public string CronExpression { get; set; }
     }
 }

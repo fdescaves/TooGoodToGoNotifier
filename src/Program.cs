@@ -27,7 +27,7 @@ namespace TooGoodToGoNotifier
                 var schedulerOptions = host.Services.GetService<IOptions<SchedulerOptions>>().Value;
                 scheduler
                 .Schedule<FavoriteBasketsWatcher>()
-                .EverySeconds(schedulerOptions.Interval)
+                .Cron(schedulerOptions.CronExpression)
                 .PreventOverlapping(nameof(FavoriteBasketsWatcher));
             })
             .LogScheduledTaskProgress(host.Services.GetService<ILogger<IScheduler>>())
@@ -58,10 +58,10 @@ namespace TooGoodToGoNotifier
                 .AddScheduler()
                 .Configure<SchedulerOptions>(host.Configuration.GetSection(nameof(SchedulerOptions)))
                 .Configure<ApiOptions>(host.Configuration.GetSection(nameof(ApiOptions)))
-                .Configure<AuthenticationOptions>(host.Configuration.GetSection(nameof(AuthenticationOptions)))
-                .AddSingleton<IRestClient, RestClient>(serviceProvider => GetRestClientInstance())
-                .AddSingleton<ITooGoodToGoApiService, TooGoodToGoApiService>()
-                .AddSingleton<IEmailNotifier, EmailNotifier>()
+                .Configure<EmailNotifierOptions>(host.Configuration.GetSection(nameof(EmailNotifierOptions)))
+                .AddTransient<IRestClient, RestClient>(serviceProvider => GetRestClientInstance())
+                .AddTransient<ITooGoodToGoApiService, TooGoodToGoApiService>()
+                .AddTransient<IEmailNotifier, EmailNotifier>()
                 .AddSingleton<FavoriteBasketsWatcher>();
             });
 

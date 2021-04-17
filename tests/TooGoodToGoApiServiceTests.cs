@@ -14,14 +14,12 @@ namespace TooGoodToGoNotifier.Tests
     public class TooGoodToGoApiServiceTests
     {
         private IOptions<ApiOptions> _apiOptions;
-        private IOptions<AuthenticationOptions> _authenticationOptions;
         private Mock<IRestClient> _restClientMock;
 
         [SetUp]
         public void SetUp()
         {
-            _apiOptions = Options.Create(new ApiOptions());
-            _authenticationOptions = Options.Create(new AuthenticationOptions());
+            _apiOptions = Options.Create(new ApiOptions { AuthenticationOptions = new AuthenticationOptions() });
             _restClientMock = new Mock<IRestClient>();
         }
 
@@ -32,7 +30,7 @@ namespace TooGoodToGoNotifier.Tests
             restResponseMock.Setup(x => x.IsSuccessful).Returns(false);
             _restClientMock.Setup(x => x.ExecuteAsync<AuthenticationResponse>(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(restResponseMock.Object));
 
-            var service = new TooGoodToGoApiService(_apiOptions, _authenticationOptions, _restClientMock.Object);
+            var service = new TooGoodToGoApiService(_apiOptions, _restClientMock.Object);
 
             Assert.ThrowsAsync<TooGoodToGoRequestException>(async () => await service.Authenticate());
         }
@@ -48,7 +46,7 @@ namespace TooGoodToGoNotifier.Tests
             restResponseMock.Setup(x => x.Data).Returns(GetAuthenticationResponse());
             _restClientMock.Setup(x => x.ExecuteAsync<AuthenticationResponse>(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(restResponseMock.Object));
 
-            var service = new TooGoodToGoApiService(_apiOptions, _authenticationOptions, _restClientMock.Object);
+            var service = new TooGoodToGoApiService(_apiOptions, _restClientMock.Object);
             await service.Authenticate();
 
             _restClientMock.Verify(x => x.ExecuteAsync<AuthenticationResponse>(It.Is<IRestRequest>(r => r.Resource == $"{_apiOptions.Value.BaseUrl}{_apiOptions.Value.AuthenticateEndpoint}" && r.Method == Method.POST), It.IsAny<CancellationToken>()));
@@ -64,7 +62,7 @@ namespace TooGoodToGoNotifier.Tests
 
             _restClientMock.Setup(x => x.ExecuteAsync<AuthenticationResponse>(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(restResponseMock.Object));
 
-            var service = new TooGoodToGoApiService(_apiOptions, _authenticationOptions, _restClientMock.Object);
+            var service = new TooGoodToGoApiService(_apiOptions, _restClientMock.Object);
             var authenticationContext = await service.Authenticate();
 
             Assert.AreEqual(authenticationResponse.AccessToken, authenticationContext.AccessToken);
@@ -79,7 +77,7 @@ namespace TooGoodToGoNotifier.Tests
             restResponseMock.Setup(x => x.IsSuccessful).Returns(false);
             _restClientMock.Setup(x => x.ExecuteAsync<GetBasketsResponse>(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(restResponseMock.Object));
 
-            var service = new TooGoodToGoApiService(_apiOptions, _authenticationOptions, _restClientMock.Object);
+            var service = new TooGoodToGoApiService(_apiOptions, _restClientMock.Object);
 
             Assert.ThrowsAsync<TooGoodToGoRequestException>(async () => await service.GetFavoriteBaskets("foo", 1));
         }
@@ -96,7 +94,7 @@ namespace TooGoodToGoNotifier.Tests
             restResponseMock.Setup(x => x.Data).Returns(getFavoriteBasketsResponse);
             _restClientMock.Setup(x => x.ExecuteAsync<GetBasketsResponse>(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(restResponseMock.Object));
 
-            var service = new TooGoodToGoApiService(_apiOptions, _authenticationOptions, _restClientMock.Object);
+            var service = new TooGoodToGoApiService(_apiOptions, _restClientMock.Object);
             await service.GetFavoriteBaskets("foo", 1);
 
             _restClientMock.Verify(x => x.ExecuteAsync<GetBasketsResponse>(It.Is<IRestRequest>(r => r.Resource == $"{_apiOptions.Value.BaseUrl}{_apiOptions.Value.GetItemsEndpoint}" && r.Method == Method.POST), It.IsAny<CancellationToken>()));

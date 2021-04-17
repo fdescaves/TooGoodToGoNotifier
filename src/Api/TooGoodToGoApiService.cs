@@ -12,12 +12,10 @@ namespace TooGoodToGoNotifier.Api
     {
         private readonly IRestClient _restClient;
         private readonly ApiOptions _apiOptions;
-        private readonly AuthenticationOptions _authenticationOptions;
 
-        public TooGoodToGoApiService(IOptions<ApiOptions> apiOptions, IOptions<AuthenticationOptions> authenticationOptions, IRestClient restClient)
+        public TooGoodToGoApiService(IOptions<ApiOptions> apiOptions, IRestClient restClient)
         {
             _apiOptions = apiOptions.Value;
-            _authenticationOptions = authenticationOptions.Value;
             _restClient = restClient;
         }
 
@@ -29,8 +27,8 @@ namespace TooGoodToGoNotifier.Api
             var authenticationRequest = new AuthenticationRequest
             {
                 DeviceType = "ANDROID",
-                Email = _authenticationOptions.Email,
-                Password = _authenticationOptions.Password
+                Email = _apiOptions.AuthenticationOptions.Email,
+                Password = _apiOptions.AuthenticationOptions.Password
             };
 
             request.AddJsonBody(authenticationRequest);
