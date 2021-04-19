@@ -35,10 +35,7 @@ namespace TooGoodToGoNotifier.Api
 
             var response = await _restClient.ExecuteAsync<AuthenticationResponse>(request);
 
-            if (!response.IsSuccessful)
-            {
-                throw new TooGoodToGoRequestException(response.Content);
-            }
+            ThrowIfResponseIsNotSuccessFul(response);
 
             return new AuthenticationContext
             {
@@ -54,17 +51,18 @@ namespace TooGoodToGoNotifier.Api
             request.AddHeader("Content-Type", "application/json");
             request.AddHeader("authorization", $"Bearer {accessToken}");
 
+            // When FavoritesOnly is true, origin and radius are ignored but still must be specified.
             var getFavoriteBasketsRequest = new GetBasketsRequest
             {
                 UserId = userId,
                 Origin = new Origin
                 {
-                    Latitude = 48.112427M,
-                    Longitude = -1.661031M
+                    Latitude = 0,
+                    Longitude = 0
                 },
-                Radius = 20,
+                Radius = 1,
                 Page = 1,
-                PageSize = 20,
+                PageSize = 400, // Max page size allowed by TooGoodToGo API
                 FavoritesOnly = true,
                 WithStockOnly = false
             };
@@ -73,12 +71,21 @@ namespace TooGoodToGoNotifier.Api
 
             var response = await _restClient.ExecuteAsync<GetBasketsResponse>(request);
 
-            if (!response.IsSuccessful)
+            ThrowIfResponseIsNotSuccessFul(response);
+
+            return response.Data;
+        }
+
+        private static void ThrowIfResponseIsNotSuccessFul(IRestResponse response)
+        {
+            if (response.ErrorException != null)
+            {
+                throw response.ErrorException;
+            }
+            else if (!response.IsSuccessful)
             {
                 throw new TooGoodToGoRequestException(response.Content);
             }
-
-            return response.Data;
         }
     }
 }
