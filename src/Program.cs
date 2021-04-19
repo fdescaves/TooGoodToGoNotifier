@@ -39,27 +39,30 @@ namespace TooGoodToGoNotifier
                 .Configure<SchedulerOptions>(host.Configuration.GetSection(nameof(SchedulerOptions)))
                 .Configure<ApiOptions>(host.Configuration.GetSection(nameof(ApiOptions)))
                 .Configure<EmailNotifierOptions>(host.Configuration.GetSection(nameof(EmailNotifierOptions)))
-                .AddTransient<IRestClient, RestClient>(serviceProvider => GetRestClientInstance())
+                .AddTransient<IRestClient, RestClient>(serviceProvider => GetConfiguredRestClient())
                 .AddTransient<ITooGoodToGoApiService, TooGoodToGoApiService>()
                 .AddTransient<IEmailNotifier, EmailNotifier>()
                 .AddSingleton<FavoriteBasketsWatcher>()
                 .AddHostedService<TooGoodToGoNotifierWorker>();
             });
 
-        private static RestClient GetRestClientInstance()
+        private static RestClient GetConfiguredRestClient()
         {
             var restClient = new RestClient
             {
                 ThrowOnAnyError = true
             };
+
             var serializerSettings = new JsonSerializerSettings
             {
-                ContractResolver = new DefaultContractResolver
+                ContractResolver = new RequireObjectPropertiesContractResolver
                 {
                     NamingStrategy = new SnakeCaseNamingStrategy()
                 }
             };
+
             restClient.UseNewtonsoftJson(serializerSettings);
+
             return restClient;
         }
     }
