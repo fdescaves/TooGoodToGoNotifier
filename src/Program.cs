@@ -1,10 +1,7 @@
-﻿using Coravel;
-using Coravel.Scheduling.Schedule.Interfaces;
-using Microsoft.Extensions.Configuration;
+using Coravel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 using NLog;
@@ -20,23 +17,7 @@ namespace TooGoodToGoNotifier
     {
         private static void Main(string[] args)
         {
-            using IHost host = CreateHostBuilder(args).Build();
-
-            host.Services.UseScheduler(scheduler =>
-            {
-                var schedulerOptions = host.Services.GetService<IOptions<SchedulerOptions>>().Value;
-                scheduler
-                .Schedule<FavoriteBasketsWatcher>()
-                .Cron(schedulerOptions.CronExpression)
-                .PreventOverlapping(nameof(FavoriteBasketsWatcher));
-            })
-            .LogScheduledTaskProgress(host.Services.GetService<ILogger<IScheduler>>())
-            .OnError((_) =>
-            {
-                host.StopAsync();
-            });
-
-            host.Run();
+            CreateHostBuilder(args).Build().Run();
         }
 
         private static IHostBuilder CreateHostBuilder(string[] args) => Host.CreateDefaultBuilder(args)
@@ -53,7 +34,6 @@ namespace TooGoodToGoNotifier
             })
             .ConfigureServices((host, services) =>
             {
-                var timerOptions = host.Configuration.GetSection(nameof(SchedulerOptions)).Get<SchedulerOptions>();
                 services.AddLogging()
                 .AddScheduler()
                 .Configure<SchedulerOptions>(host.Configuration.GetSection(nameof(SchedulerOptions)))
@@ -62,7 +42,8 @@ namespace TooGoodToGoNotifier
                 .AddTransient<IRestClient, RestClient>(serviceProvider => GetRestClientInstance())
                 .AddTransient<ITooGoodToGoApiService, TooGoodToGoApiService>()
                 .AddTransient<IEmailNotifier, EmailNotifier>()
-                .AddSingleton<FavoriteBasketsWatcher>();
+                .AddSingleton<FavoriteBasketsWatcher>()
+                .AddHostedService<TooGoodToGoNotifierWorker>();
             });
 
         private static RestClient GetRestClientInstance()
