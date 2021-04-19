@@ -13,11 +13,13 @@ namespace TooGoodToGoNotifier
 {
     public class TooGoodToGoNotifierWorker : BackgroundService
     {
+        private readonly IHostEnvironment _hostEnvironment;
         private readonly IServiceProvider _serviceProvider;
         private readonly SchedulerOptions _schedulerOptions;
 
-        public TooGoodToGoNotifierWorker(IServiceProvider serviceProvider, IOptions<SchedulerOptions> schedulerOptions)
+        public TooGoodToGoNotifierWorker(IHostEnvironment hostEnvironment, IServiceProvider serviceProvider, IOptions<SchedulerOptions> schedulerOptions)
         {
+            _hostEnvironment = hostEnvironment;
             _serviceProvider = serviceProvider;
             _schedulerOptions = schedulerOptions.Value;
         }
@@ -27,7 +29,7 @@ namespace TooGoodToGoNotifier
             _serviceProvider.UseScheduler(scheduler =>
             {
                 var scheduleInterval = scheduler.Schedule<FavoriteBasketsWatcher>();
-                var scheduledEventConfiguration = scheduleInterval.Cron(_schedulerOptions.CronExpression);
+                var scheduledEventConfiguration = _hostEnvironment.IsDevelopment() ? scheduleInterval.EveryFiveSeconds() : scheduleInterval.Cron(_schedulerOptions.CronExpression);
                 scheduledEventConfiguration
                 .Zoned(TimeZoneInfo.Local)
                 .PreventOverlapping(nameof(FavoriteBasketsWatcher));
