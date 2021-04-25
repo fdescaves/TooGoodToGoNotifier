@@ -26,9 +26,9 @@ namespace TooGoodToGoNotifier.Tests
         [Test]
         public void Authenticate_Should_Throw_When_ResponseIsNotSuccessful()
         {
-            var restResponseMock = new Mock<IRestResponse<AuthenticationResponse>>();
+            var restResponseMock = new Mock<IRestResponse>();
             restResponseMock.Setup(x => x.IsSuccessful).Returns(false);
-            _restClientMock.Setup(x => x.ExecuteAsync<AuthenticationResponse>(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(restResponseMock.Object));
+            _restClientMock.Setup(x => x.ExecuteAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(restResponseMock.Object));
 
             var service = new TooGoodToGoApiService(_apiOptions, _restClientMock.Object);
 
@@ -41,26 +41,34 @@ namespace TooGoodToGoNotifier.Tests
             _apiOptions.Value.BaseUrl = "baseUrl";
             _apiOptions.Value.AuthenticateEndpoint = "/login";
 
-            var restResponseMock = new Mock<IRestResponse<AuthenticationResponse>>();
+            var restResponseMock = new Mock<IRestResponse>();
             restResponseMock.Setup(x => x.IsSuccessful).Returns(true);
-            restResponseMock.Setup(x => x.Data).Returns(GetAuthenticationResponse());
-            _restClientMock.Setup(x => x.ExecuteAsync<AuthenticationResponse>(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(restResponseMock.Object));
+
+            var restReponseOfAuthenticationResponse = new Mock<IRestResponse<AuthenticationResponse>>();
+            restReponseOfAuthenticationResponse.Setup(x => x.Data).Returns(GetAuthenticationResponse());
+
+            _restClientMock.Setup(x => x.ExecuteAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(restResponseMock.Object));
+            _restClientMock.Setup(x => x.Deserialize<AuthenticationResponse>(restResponseMock.Object)).Returns(restReponseOfAuthenticationResponse.Object);
 
             var service = new TooGoodToGoApiService(_apiOptions, _restClientMock.Object);
             await service.Authenticate();
 
-            _restClientMock.Verify(x => x.ExecuteAsync<AuthenticationResponse>(It.Is<IRestRequest>(r => r.Resource == $"{_apiOptions.Value.BaseUrl}{_apiOptions.Value.AuthenticateEndpoint}" && r.Method == Method.POST), It.IsAny<CancellationToken>()));
+            _restClientMock.Verify(x => x.ExecuteAsync(It.Is<IRestRequest>(r => r.Resource == $"{_apiOptions.Value.BaseUrl}{_apiOptions.Value.AuthenticateEndpoint}" && r.Method == Method.POST), It.IsAny<CancellationToken>()));
         }
 
         [Test]
         public async Task Authenticate_Should_Returns_AuthenticationContext_With_ResponseData_When_ResponseIsSuccessful()
         {
             var authenticationResponse = GetAuthenticationResponse();
-            var restResponseMock = new Mock<IRestResponse<AuthenticationResponse>>();
-            restResponseMock.Setup(x => x.IsSuccessful).Returns(true);
-            restResponseMock.Setup(x => x.Data).Returns(authenticationResponse);
 
-            _restClientMock.Setup(x => x.ExecuteAsync<AuthenticationResponse>(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(restResponseMock.Object));
+            var restResponseMock = new Mock<IRestResponse>();
+            restResponseMock.Setup(x => x.IsSuccessful).Returns(true);
+
+            var restReponseOfAuthenticationResponse = new Mock<IRestResponse<AuthenticationResponse>>();
+            restReponseOfAuthenticationResponse.Setup(x => x.Data).Returns(authenticationResponse);
+
+            _restClientMock.Setup(x => x.ExecuteAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(restResponseMock.Object));
+            _restClientMock.Setup(x => x.Deserialize<AuthenticationResponse>(restResponseMock.Object)).Returns(restReponseOfAuthenticationResponse.Object);
 
             var service = new TooGoodToGoApiService(_apiOptions, _restClientMock.Object);
             var authenticationContext = await service.Authenticate();
@@ -73,9 +81,9 @@ namespace TooGoodToGoNotifier.Tests
         [Test]
         public void GetFavoriteBaskets_Should_Throw_When_ResponseIsNotSuccessful()
         {
-            var restResponseMock = new Mock<IRestResponse<GetBasketsResponse>>();
+            var restResponseMock = new Mock<IRestResponse>();
             restResponseMock.Setup(x => x.IsSuccessful).Returns(false);
-            _restClientMock.Setup(x => x.ExecuteAsync<GetBasketsResponse>(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(restResponseMock.Object));
+            _restClientMock.Setup(x => x.ExecuteAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(restResponseMock.Object));
 
             var service = new TooGoodToGoApiService(_apiOptions, _restClientMock.Object);
 
@@ -89,15 +97,20 @@ namespace TooGoodToGoNotifier.Tests
             _apiOptions.Value.GetItemsEndpoint = "/items";
 
             var getFavoriteBasketsResponse = new GetBasketsResponse();
-            var restResponseMock = new Mock<IRestResponse<GetBasketsResponse>>();
+
+            var restResponseMock = new Mock<IRestResponse>();
             restResponseMock.Setup(x => x.IsSuccessful).Returns(true);
-            restResponseMock.Setup(x => x.Data).Returns(getFavoriteBasketsResponse);
-            _restClientMock.Setup(x => x.ExecuteAsync<GetBasketsResponse>(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(restResponseMock.Object));
+
+            var restReponseOfGetBasketsResponse = new Mock<IRestResponse<GetBasketsResponse>>();
+            restReponseOfGetBasketsResponse.Setup(x => x.Data).Returns(getFavoriteBasketsResponse);
+
+            _restClientMock.Setup(x => x.ExecuteAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(restResponseMock.Object));
+            _restClientMock.Setup(x => x.Deserialize<GetBasketsResponse>(restResponseMock.Object)).Returns(restReponseOfGetBasketsResponse.Object);
 
             var service = new TooGoodToGoApiService(_apiOptions, _restClientMock.Object);
             await service.GetFavoriteBaskets("foo", 1);
 
-            _restClientMock.Verify(x => x.ExecuteAsync<GetBasketsResponse>(It.Is<IRestRequest>(r => r.Resource == $"{_apiOptions.Value.BaseUrl}{_apiOptions.Value.GetItemsEndpoint}" && r.Method == Method.POST), It.IsAny<CancellationToken>()));
+            _restClientMock.Verify(x => x.ExecuteAsync(It.Is<IRestRequest>(r => r.Resource == $"{_apiOptions.Value.BaseUrl}{_apiOptions.Value.GetItemsEndpoint}" && r.Method == Method.POST), It.IsAny<CancellationToken>()));
         }
 
         private static AuthenticationResponse GetAuthenticationResponse()

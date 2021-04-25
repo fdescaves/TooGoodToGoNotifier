@@ -22,7 +22,6 @@ namespace TooGoodToGoNotifier.Api
         public async Task<AuthenticationContext> Authenticate()
         {
             var request = new RestRequest($"{_apiOptions.BaseUrl}{_apiOptions.AuthenticateEndpoint}", Method.POST);
-            request.AddHeader("Content-Type", "application/json");
 
             var authenticationRequest = new AuthenticationRequest
             {
@@ -33,22 +32,21 @@ namespace TooGoodToGoNotifier.Api
 
             request.AddJsonBody(authenticationRequest);
 
-            var response = await _restClient.ExecuteAsync<AuthenticationResponse>(request);
+            var response = await ExecuteAsyncAndThrowIfNotSuccessful(request);
 
-            ThrowIfResponseIsNotSuccessFul(response);
+            var authenticationResponse = _restClient.Deserialize<AuthenticationResponse>(response);
 
             return new AuthenticationContext
             {
-                AccessToken = response.Data.AccessToken,
-                RefreshToken = response.Data.RefreshToken,
-                UserId = response.Data.StartupData.User.UserId
+                AccessToken = authenticationResponse.Data.AccessToken,
+                RefreshToken = authenticationResponse.Data.RefreshToken,
+                UserId = authenticationResponse.Data.StartupData.User.UserId
             };
         }
 
         public async Task<GetBasketsResponse> GetFavoriteBaskets(string accessToken, int userId)
         {
             var request = new RestRequest($"{_apiOptions.BaseUrl}{_apiOptions.GetItemsEndpoint}", Method.POST);
-            request.AddHeader("Content-Type", "application/json");
             request.AddHeader("authorization", $"Bearer {accessToken}");
 
             // When FavoritesOnly is true, origin and radius are ignored but still must be specified.
@@ -69,23 +67,23 @@ namespace TooGoodToGoNotifier.Api
 
             request.AddJsonBody(getFavoriteBasketsRequest);
 
-            var response = await _restClient.ExecuteAsync<GetBasketsResponse>(request);
+            var response = await ExecuteAsyncAndThrowIfNotSuccessful(request);
 
-            ThrowIfResponseIsNotSuccessFul(response);
+            var getBasketsResponse = _restClient.Deserialize<GetBasketsResponse>(response);
 
-            return response.Data;
+            return getBasketsResponse.Data;
         }
 
-        private static void ThrowIfResponseIsNotSuccessFul(IRestResponse response)
+        private async Task<IRestResponse> ExecuteAsyncAndThrowIfNotSuccessful(IRestRequest restRequest)
         {
-            if (response.ErrorException != null)
-            {
-                throw response.ErrorException;
-            }
-            else if (!response.IsSuccessful)
+            var response = await _restClient.ExecuteAsync(restRequest);
+
+            if (!response.IsSuccessful)
             {
                 throw new TooGoodToGoRequestException(response.Content);
             }
+
+            return response;
         }
     }
 }

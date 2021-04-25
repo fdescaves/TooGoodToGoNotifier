@@ -16,12 +16,14 @@ namespace TooGoodToGoNotifier
         private readonly IHostEnvironment _hostEnvironment;
         private readonly IServiceProvider _serviceProvider;
         private readonly SchedulerOptions _schedulerOptions;
+        private readonly IHostApplicationLifetime _hostApplicationLifetime;
 
-        public TooGoodToGoNotifierWorker(IHostEnvironment hostEnvironment, IServiceProvider serviceProvider, IOptions<SchedulerOptions> schedulerOptions)
+        public TooGoodToGoNotifierWorker(IHostEnvironment hostEnvironment, IHostApplicationLifetime hostApplicationLifetime, IServiceProvider serviceProvider, IOptions<SchedulerOptions> schedulerOptions)
         {
             _hostEnvironment = hostEnvironment;
             _serviceProvider = serviceProvider;
             _schedulerOptions = schedulerOptions.Value;
+            _hostApplicationLifetime = hostApplicationLifetime;
         }
 
         protected override Task ExecuteAsync(CancellationToken stoppingToken)
@@ -37,7 +39,7 @@ namespace TooGoodToGoNotifier
             .LogScheduledTaskProgress(_serviceProvider.GetService<ILogger<IScheduler>>())
             .OnError((exception) =>
             {
-                throw exception;
+                _hostApplicationLifetime.StopApplication();
             });
 
             return Task.CompletedTask;

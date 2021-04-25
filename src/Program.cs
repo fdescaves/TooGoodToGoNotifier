@@ -50,7 +50,7 @@ namespace TooGoodToGoNotifier
         {
             var restClient = new RestClient
             {
-                ThrowOnAnyError = true
+                ThrowOnDeserializationError = true
             };
 
             var serializerSettings = new JsonSerializerSettings
