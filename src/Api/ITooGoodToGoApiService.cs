@@ -7,6 +7,8 @@ namespace TooGoodToGoNotifier.Api
     {
         public Task<AuthenticationContext> Authenticate();
 
-        public Task<GetBasketsResponse> GetFavoriteBaskets(string accessToken, int userId);
+        public Task<AuthenticationContext> RefreshAccessToken(AuthenticationContext authenticationContext);
+
+        public Task<GetBasketsResponse> GetFavoriteBaskets(AuthenticationContext authenticationContext);
     }
 }

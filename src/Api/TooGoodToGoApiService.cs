@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using RestSharp;
 using TooGoodToGoNotifier.Api.Requests;
@@ -40,19 +41,44 @@ namespace TooGoodToGoNotifier.Api
             {
                 AccessToken = authenticationResponse.Data.AccessToken,
                 RefreshToken = authenticationResponse.Data.RefreshToken,
-                UserId = authenticationResponse.Data.StartupData.User.UserId
+                UserId = authenticationResponse.Data.StartupData.User.UserId,
+                AuthenticatedOn = DateTime.Now
             };
         }
 
-        public async Task<GetBasketsResponse> GetFavoriteBaskets(string accessToken, int userId)
+        public async Task<AuthenticationContext> RefreshAccessToken(AuthenticationContext authenticationContext)
+        {
+            var request = new RestRequest($"{_apiOptions.BaseUrl}{_apiOptions.RefreshTokenEndpoint}", Method.POST);
+
+            var refreshTokenRequest = new RefreshTokenRequest
+            {
+                RefreshToken = authenticationContext.RefreshToken
+            };
+
+            request.AddJsonBody(refreshTokenRequest);
+
+            var response = await ExecuteAsyncAndThrowIfNotSuccessful(request);
+
+            var refreshTokenResponse = _restClient.Deserialize<RefreshTokenResponse>(response);
+
+            return new AuthenticationContext
+            {
+                AccessToken = refreshTokenResponse.Data.AccessToken,
+                RefreshToken = refreshTokenResponse.Data.RefreshToken,
+                UserId = authenticationContext.UserId,
+                AuthenticatedOn = DateTime.Now
+            };
+        }
+
+        public async Task<GetBasketsResponse> GetFavoriteBaskets(AuthenticationContext authenticationContext)
         {
             var request = new RestRequest($"{_apiOptions.BaseUrl}{_apiOptions.GetItemsEndpoint}", Method.POST);
-            request.AddHeader("authorization", $"Bearer {accessToken}");
+            request.AddHeader("authorization", $"Bearer {authenticationContext.AccessToken}");
 
             // When FavoritesOnly is true, origin and radius are ignored but still must be specified.
             var getFavoriteBasketsRequest = new GetBasketsRequest
             {
-                UserId = userId,
+                UserId = authenticationContext.UserId,
                 Origin = new Origin
                 {
                     Latitude = 0,

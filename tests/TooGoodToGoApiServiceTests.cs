@@ -81,13 +81,14 @@ namespace TooGoodToGoNotifier.Tests
         [Test]
         public void GetFavoriteBaskets_Should_Throw_When_ResponseIsNotSuccessful()
         {
+            var authenticationContext = new AuthenticationContext { AccessToken = "foo", RefreshToken = "bar", UserId = 1 };
             var restResponseMock = new Mock<IRestResponse>();
             restResponseMock.Setup(x => x.IsSuccessful).Returns(false);
             _restClientMock.Setup(x => x.ExecuteAsync(It.IsAny<IRestRequest>(), It.IsAny<CancellationToken>())).Returns(Task.FromResult(restResponseMock.Object));
 
             var service = new TooGoodToGoApiService(_apiOptions, _restClientMock.Object);
 
-            Assert.ThrowsAsync<TooGoodToGoRequestException>(async () => await service.GetFavoriteBaskets("foo", 1));
+            Assert.ThrowsAsync<TooGoodToGoRequestException>(async () => await service.GetFavoriteBaskets(authenticationContext));
         }
 
         [Test]
@@ -96,6 +97,7 @@ namespace TooGoodToGoNotifier.Tests
             _apiOptions.Value.BaseUrl = "baseUrl";
             _apiOptions.Value.GetItemsEndpoint = "/items";
 
+            var authenticationContext = new AuthenticationContext { AccessToken = "foo", RefreshToken = "bar", UserId = 1 };
             var getFavoriteBasketsResponse = new GetBasketsResponse();
 
             var restResponseMock = new Mock<IRestResponse>();
@@ -108,7 +110,7 @@ namespace TooGoodToGoNotifier.Tests
             _restClientMock.Setup(x => x.Deserialize<GetBasketsResponse>(restResponseMock.Object)).Returns(restReponseOfGetBasketsResponse.Object);
 
             var service = new TooGoodToGoApiService(_apiOptions, _restClientMock.Object);
-            await service.GetFavoriteBaskets("foo", 1);
+            await service.GetFavoriteBaskets(authenticationContext);
 
             _restClientMock.Verify(x => x.ExecuteAsync(It.Is<IRestRequest>(r => r.Resource == $"{_apiOptions.Value.BaseUrl}{_apiOptions.Value.GetItemsEndpoint}" && r.Method == Method.POST), It.IsAny<CancellationToken>()));
         }

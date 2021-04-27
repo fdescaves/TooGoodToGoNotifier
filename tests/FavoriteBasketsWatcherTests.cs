@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Moq;
 using NUnit.Framework;
 using TooGoodToGoNotifier.Api;
 using TooGoodToGoNotifier.Api.Responses;
+using TooGoodToGoNotifier.Configuration;
 
 namespace TooGoodToGoNotifier.Tests
 {
@@ -12,6 +14,7 @@ namespace TooGoodToGoNotifier.Tests
     public class FavoriteBasketsWatcherTests
     {
         private Mock<ILogger<FavoriteBasketsWatcher>> _loggerMock;
+        private IOptions<WatcherOptions> _watcherOptions;
         private Mock<ITooGoodToGoApiService> _tooGoodToGoApiServiceMock;
         private Mock<IEmailNotifier> _emailNotifierMock;
 
@@ -19,6 +22,7 @@ namespace TooGoodToGoNotifier.Tests
         public void SetUp()
         {
             _loggerMock = new Mock<ILogger<FavoriteBasketsWatcher>>();
+            _watcherOptions = Options.Create(new WatcherOptions { RefreshTokenInterval = 24 });
             _tooGoodToGoApiServiceMock = new Mock<ITooGoodToGoApiService>();
             _emailNotifierMock = new Mock<IEmailNotifier>();
         }
@@ -52,9 +56,9 @@ namespace TooGoodToGoNotifier.Tests
             };
 
             _tooGoodToGoApiServiceMock.Setup(x => x.Authenticate()).Returns(Task.FromResult(GetAuthenticationContext()));
-            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<string>(), It.IsAny<int>())).Returns(Task.FromResult(getBasketsResponse));
+            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<AuthenticationContext>())).Returns(Task.FromResult(getBasketsResponse));
 
-            var favoriteBasketsWatcher = new FavoriteBasketsWatcher(_loggerMock.Object, _tooGoodToGoApiServiceMock.Object, _emailNotifierMock.Object);
+            var favoriteBasketsWatcher = new FavoriteBasketsWatcher(_loggerMock.Object, _watcherOptions, _tooGoodToGoApiServiceMock.Object, _emailNotifierMock.Object);
             await favoriteBasketsWatcher.Invoke();
 
             // Only one basket should have been notified, the basket N°1 that has 1 available item.
@@ -81,9 +85,9 @@ namespace TooGoodToGoNotifier.Tests
             };
 
             _tooGoodToGoApiServiceMock.Setup(x => x.Authenticate()).Returns(Task.FromResult(GetAuthenticationContext()));
-            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<string>(), It.IsAny<int>())).Returns(Task.FromResult(getBasketsResponse));
+            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<AuthenticationContext>())).Returns(Task.FromResult(getBasketsResponse));
 
-            var favoriteBasketsWatcher = new FavoriteBasketsWatcher(_loggerMock.Object, _tooGoodToGoApiServiceMock.Object, _emailNotifierMock.Object);
+            var favoriteBasketsWatcher = new FavoriteBasketsWatcher(_loggerMock.Object, _watcherOptions, _tooGoodToGoApiServiceMock.Object, _emailNotifierMock.Object);
             await favoriteBasketsWatcher.Invoke();
 
             // Notify should have been called only once.
@@ -94,21 +98,21 @@ namespace TooGoodToGoNotifier.Tests
         public async Task FavoriteBasketsWatcher_When_BasketIsSeenAsAvailable_Then_SeenAsNotAvailable_Then_SeenAsAvailable_Should_NotifyTwice()
         {
             _tooGoodToGoApiServiceMock.Setup(x => x.Authenticate()).Returns(Task.FromResult(GetAuthenticationContext()));
-            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<string>(), It.IsAny<int>())).Returns(Task.FromResult(GetBasketsResponse(1)));
+            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<AuthenticationContext>())).Returns(Task.FromResult(GetBasketsResponse(1)));
 
-            var favoriteBasketsWatcher = new FavoriteBasketsWatcher(_loggerMock.Object, _tooGoodToGoApiServiceMock.Object, _emailNotifierMock.Object);
+            var favoriteBasketsWatcher = new FavoriteBasketsWatcher(_loggerMock.Object, _watcherOptions, _tooGoodToGoApiServiceMock.Object, _emailNotifierMock.Object);
             await favoriteBasketsWatcher.Invoke();
 
             // Notify should be called once.
             _emailNotifierMock.Verify(x => x.Notify(It.Is<List<Basket>>(x => x.Count == 1 && x[0].Item.ItemId == 1)), Times.Once);
 
-            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<string>(), It.IsAny<int>())).Returns(Task.FromResult(GetBasketsResponse(0)));
+            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<AuthenticationContext>())).Returns(Task.FromResult(GetBasketsResponse(0)));
             await favoriteBasketsWatcher.Invoke();
 
             // Notify should still have been called once.
             _emailNotifierMock.Verify(x => x.Notify(It.Is<List<Basket>>(x => x.Count == 1 && x[0].Item.ItemId == 1)), Times.Once);
 
-            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<string>(), It.IsAny<int>())).Returns(Task.FromResult(GetBasketsResponse(1)));
+            _tooGoodToGoApiServiceMock.Setup(x => x.GetFavoriteBaskets(It.IsAny<AuthenticationContext>())).Returns(Task.FromResult(GetBasketsResponse(1)));
             await favoriteBasketsWatcher.Invoke();
 
             // Notify should have been called a second time.
