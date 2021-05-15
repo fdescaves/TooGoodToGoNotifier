@@ -33,11 +33,13 @@ Open the [appsettings.json](src/appsettings.json) configuration file:
   }
 ```
 
-- By default, the app looks for available favorite baskets every day every minute of every hour between 7AM to 7PM. This behavior is configured using a cron expression and can be modified
+- Search for available favorite baskets happens every day every X seconds. **Interval** value must be between 1 and 59. Search is also restricted between the configured range with **StartTime** and **EndTime** parameters.
 
 ```json
   "SchedulerOptions": {
-    "CronExpression": "*/1 7-19 * * *"
+    "Interval" : 10,
+    "StartTime": "07:00:00",
+    "EndTime": "20:00:00"
   }
 ```
 

@@ -1,7 +1,13 @@
-﻿namespace TooGoodToGoNotifier.Configuration
+﻿using System;
+
+namespace TooGoodToGoNotifier.Configuration
 {
     public class SchedulerOptions
     {
-        public string CronExpression { get; set; }
+        public int Interval { get; set; }
+
+        public TimeSpan StartTime { get; set; }
+
+        public TimeSpan EndTime { get; set; }
     }
 }
