@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Options;
 using RestSharp;
@@ -106,7 +106,7 @@ namespace TooGoodToGoNotifier.Api
 
             if (!response.IsSuccessful)
             {
-                throw new TooGoodToGoRequestException(response.Content);
+                throw new TooGoodToGoRequestException("Error while requesting TooGoodToGo Api", response.StatusCode, response.Content, response.ErrorException);
             }
 
             return response;
