@@ -3,7 +3,7 @@ using TooGoodToGoNotifier.Api.Responses;
 
 namespace TooGoodToGoNotifier.Api
 {
-    public interface ITooGoodToGoApiService
+    public interface ITooGoodToGoService
     {
         public Task<GetBasketsResponse> GetFavoriteBaskets();
     }

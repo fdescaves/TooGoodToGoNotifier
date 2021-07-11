@@ -5,7 +5,7 @@ namespace TooGoodToGoNotifier.Api
 {
     public class TooGoodToGoRequestException : Exception
     {
-        public TooGoodToGoRequestException(string message, HttpStatusCode statusCode, string body, Exception innerException) : base(message, innerException)
+        public TooGoodToGoRequestException(string message, HttpStatusCode statusCode, string body) : base(message)
         {
             StatusCode = statusCode;
             Body = body;

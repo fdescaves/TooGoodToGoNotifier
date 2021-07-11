@@ -1,13 +1,13 @@
+using System;
+using System.Net.Http;
 using Coravel;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Serialization;
 using NLog;
 using NLog.Extensions.Logging;
-using RestSharp;
-using RestSharp.Serializers.NewtonsoftJson;
+using Polly;
+using Polly.Extensions.Http;
 using TooGoodToGoNotifier.Api;
 using TooGoodToGoNotifier.Configuration;
 
@@ -39,32 +39,20 @@ namespace TooGoodToGoNotifier
                 .Configure<SchedulerOptions>(host.Configuration.GetSection(nameof(SchedulerOptions)))
                 .Configure<ApiOptions>(host.Configuration.GetSection(nameof(ApiOptions)))
                 .Configure<EmailNotifierOptions>(host.Configuration.GetSection(nameof(EmailNotifierOptions)))
-                .AddTransient<IRestClient, RestClient>(serviceProvider => GetConfiguredRestClient())
-                .AddTransient<ITooGoodToGoApiService, TooGoodToGoApiService>()
+                .AddTransient<ITooGoodToGoService, TooGoodToGoService>()
                 .AddTransient<IEmailNotifier, EmailNotifier>()
                 .AddSingleton<FavoriteBasketsWatcher>()
                 .AddSingleton<AuthenticationContext>()
-                .AddHostedService<TooGoodToGoNotifierWorker>();
+                .AddHostedService<TooGoodToGoNotifierWorker>()
+                .AddHttpClient<ITooGoodToGoService, TooGoodToGoService>()
+                .AddPolicyHandler(GetRetryPolicy());
             });
 
-        private static RestClient GetConfiguredRestClient()
+        private static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
         {
-            var restClient = new RestClient
-            {
-                ThrowOnDeserializationError = true
-            };
-
-            var serializerSettings = new JsonSerializerSettings
-            {
-                ContractResolver = new RequireObjectPropertiesContractResolver
-                {
-                    NamingStrategy = new SnakeCaseNamingStrategy()
-                }
-            };
-
-            restClient.UseNewtonsoftJson(serializerSettings);
-
-            return restClient;
+            return HttpPolicyExtensions
+                .HandleTransientHttpError()
+                .WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
         }
     }
 }

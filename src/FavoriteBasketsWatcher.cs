@@ -11,14 +11,14 @@ namespace TooGoodToGoNotifier
     public class FavoriteBasketsWatcher : IInvocable
     {
         private readonly ILogger _logger;
-        private readonly ITooGoodToGoApiService _tooGoodToGoApiService;
+        private readonly ITooGoodToGoService _tooGoodToGoService;
         private readonly IEmailNotifier _emailNotifier;
         private readonly Dictionary<int, bool> _notifiedBaskets = new();
 
-        public FavoriteBasketsWatcher(ILogger<FavoriteBasketsWatcher> logger, ITooGoodToGoApiService tooGoodToGoApiService, IEmailNotifier emailNotifier)
+        public FavoriteBasketsWatcher(ILogger<FavoriteBasketsWatcher> logger, ITooGoodToGoService tooGoodToGoService, IEmailNotifier emailNotifier)
         {
             _logger = logger;
-            _tooGoodToGoApiService = tooGoodToGoApiService;
+            _tooGoodToGoService = tooGoodToGoService;
             _emailNotifier = emailNotifier;
         }
 
@@ -26,7 +26,7 @@ namespace TooGoodToGoNotifier
         {
             _logger.LogInformation($"{nameof(FavoriteBasketsWatcher)} started");
 
-            var getBasketsResponse = await _tooGoodToGoApiService.GetFavoriteBaskets();
+            var getBasketsResponse = await _tooGoodToGoService.GetFavoriteBaskets();
 
             var basketsToNotify = new List<Basket>();
             foreach (var basket in getBasketsResponse.Items)
