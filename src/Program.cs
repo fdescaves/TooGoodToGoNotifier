@@ -36,7 +36,6 @@ namespace TooGoodToGoNotifier
             {
                 services.AddLogging()
                 .AddScheduler()
-                .Configure<WatcherOptions>(host.Configuration.GetSection(nameof(WatcherOptions)))
                 .Configure<SchedulerOptions>(host.Configuration.GetSection(nameof(SchedulerOptions)))
                 .Configure<ApiOptions>(host.Configuration.GetSection(nameof(ApiOptions)))
                 .Configure<EmailNotifierOptions>(host.Configuration.GetSection(nameof(EmailNotifierOptions)))
@@ -44,6 +43,7 @@ namespace TooGoodToGoNotifier
                 .AddTransient<ITooGoodToGoApiService, TooGoodToGoApiService>()
                 .AddTransient<IEmailNotifier, EmailNotifier>()
                 .AddSingleton<FavoriteBasketsWatcher>()
+                .AddSingleton<AuthenticationContext>()
                 .AddHostedService<TooGoodToGoNotifierWorker>();
             });
 

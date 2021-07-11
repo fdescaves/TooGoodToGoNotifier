@@ -8,8 +8,8 @@ namespace TooGoodToGoNotifier
 
         public string RefreshToken { get; set; }
 
-        public int UserId { get; set; }
+        public int? UserId { get; set; }
 
-        public DateTime AuthenticatedOn { get; set; }
+        public DateTime? LastAuthenticatedOn { get; set; }
     }
 }

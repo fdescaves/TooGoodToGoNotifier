@@ -1,30 +1,23 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Coravel.Invocable;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using TooGoodToGoNotifier.Api;
 using TooGoodToGoNotifier.Api.Responses;
-using TooGoodToGoNotifier.Configuration;
 
 namespace TooGoodToGoNotifier
 {
     public class FavoriteBasketsWatcher : IInvocable
     {
         private readonly ILogger _logger;
-        private readonly WatcherOptions _watcherOptions;
         private readonly ITooGoodToGoApiService _tooGoodToGoApiService;
         private readonly IEmailNotifier _emailNotifier;
         private readonly Dictionary<int, bool> _notifiedBaskets = new();
 
-        private AuthenticationContext _authenticationContext;
-
-        public FavoriteBasketsWatcher(ILogger<FavoriteBasketsWatcher> logger, IOptions<WatcherOptions> watcherOptions, ITooGoodToGoApiService tooGoodToGoApiService, IEmailNotifier emailNotifier)
+        public FavoriteBasketsWatcher(ILogger<FavoriteBasketsWatcher> logger, ITooGoodToGoApiService tooGoodToGoApiService, IEmailNotifier emailNotifier)
         {
             _logger = logger;
-            _watcherOptions = watcherOptions.Value;
             _tooGoodToGoApiService = tooGoodToGoApiService;
             _emailNotifier = emailNotifier;
         }
@@ -33,18 +26,7 @@ namespace TooGoodToGoNotifier
         {
             _logger.LogInformation($"{nameof(FavoriteBasketsWatcher)} started");
 
-            if (_authenticationContext == null)
-            {
-                _logger.LogInformation($"Authentication context is null => Authenticate");
-                _authenticationContext = await _tooGoodToGoApiService.Authenticate();
-            }
-            else if (_authenticationContext.AuthenticatedOn.AddHours(_watcherOptions.RefreshTokenInterval) < DateTime.Now)
-            {
-                _logger.LogInformation($"Authentication context is expired => Refresh");
-                _authenticationContext = await _tooGoodToGoApiService.RefreshAccessToken(_authenticationContext);
-            }
-
-            var getBasketsResponse = await _tooGoodToGoApiService.GetFavoriteBaskets(_authenticationContext);
+            var getBasketsResponse = await _tooGoodToGoApiService.GetFavoriteBaskets();
 
             var basketsToNotify = new List<Basket>();
             foreach (var basket in getBasketsResponse.Items)
