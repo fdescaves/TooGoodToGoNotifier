@@ -52,7 +52,8 @@ namespace TooGoodToGoNotifier
         {
             return HttpPolicyExtensions
                 .HandleTransientHttpError()
-                .WaitAndRetryAsync(5, retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)));
+                .OrInner<TimeoutException>()
+                .WaitAndRetryForeverAsync(retryAttempt => TimeSpan.FromSeconds(retryAttempt * 5));
         }
     }
 }
