@@ -1,13 +1,14 @@
 using System;
 using System.Net.Http;
 using Coravel;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Extensions.Logging;
 using Polly;
-using Polly.Extensions.Http;
+using Polly.Timeout;
 using TooGoodToGoNotifier.Api;
 using TooGoodToGoNotifier.Configuration;
 
@@ -23,7 +24,7 @@ namespace TooGoodToGoNotifier
         private static IHostBuilder CreateHostBuilder(string[] args) => Host.CreateDefaultBuilder(args)
             .ConfigureAppConfiguration((hostingContext, configuration) =>
             {
-                var config = configuration.Build();
+                IConfigurationRoot config = configuration.Build();
                 LogManager.Setup().LoadConfigurationFromSection(config);
             })
             .ConfigureLogging((hostingContext, logging) =>
@@ -43,17 +44,15 @@ namespace TooGoodToGoNotifier
                 .AddTransient<IEmailNotifier, EmailNotifier>()
                 .AddSingleton<FavoriteBasketsWatcher>()
                 .AddSingleton<AuthenticationContext>()
-                .AddHostedService<TooGoodToGoNotifierWorker>()
-                .AddHttpClient<ITooGoodToGoService, TooGoodToGoService>()
-                .AddPolicyHandler(GetRetryPolicy());
-            });
+                .AddHostedService<TooGoodToGoNotifierWorker>();
 
-        private static IAsyncPolicy<HttpResponseMessage> GetRetryPolicy()
-        {
-            return HttpPolicyExtensions
-                .HandleTransientHttpError()
-                .OrInner<TimeoutException>()
-                .WaitAndRetryForeverAsync(retryAttempt => TimeSpan.FromSeconds(retryAttempt * 5));
-        }
+                services
+                .AddHttpClient<ITooGoodToGoService, TooGoodToGoService>()
+                .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(10))
+                .AddTransientHttpErrorPolicy(configurePolicy =>
+                    configurePolicy
+                    .OrInner<TimeoutRejectedException>()
+                    .WaitAndRetryForeverAsync(retryAttempt => TimeSpan.FromSeconds(retryAttempt * 10)));
+            });
     }
 }
