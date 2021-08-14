@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Coravel.Invocable;
@@ -13,27 +14,30 @@ namespace TooGoodToGoNotifier
         private readonly ILogger _logger;
         private readonly ITooGoodToGoService _tooGoodToGoService;
         private readonly IEmailNotifier _emailNotifier;
-        private readonly Dictionary<int, bool> _notifiedBaskets = new();
+        private readonly Dictionary<int, bool> _notifiedBaskets;
+        private readonly Guid _guid;
 
         public FavoriteBasketsWatcher(ILogger<FavoriteBasketsWatcher> logger, ITooGoodToGoService tooGoodToGoService, IEmailNotifier emailNotifier)
         {
             _logger = logger;
             _tooGoodToGoService = tooGoodToGoService;
             _emailNotifier = emailNotifier;
+            _notifiedBaskets = new();
+            _guid = Guid.NewGuid();
         }
 
         public async Task Invoke()
         {
-            _logger.LogInformation($"{nameof(FavoriteBasketsWatcher)} started");
+            _logger.LogInformation($"{nameof(FavoriteBasketsWatcher)} started - {_guid}");
 
-            var getBasketsResponse = await _tooGoodToGoService.GetFavoriteBaskets();
+            GetBasketsResponse getBasketsResponse = await _tooGoodToGoService.GetFavoriteBaskets();
 
             var basketsToNotify = new List<Basket>();
-            foreach (var basket in getBasketsResponse.Items)
+            foreach (Basket basket in getBasketsResponse.Items)
             {
                 _logger.LogDebug($"Basket N°{basket.Item.ItemId} | DisplayName: \"{basket.DisplayName}\" | AvailableItems: {basket.ItemsAvailable}");
 
-                if (_notifiedBaskets.TryGetValue(basket.Item.ItemId, out var isAlreadyNotified))
+                if (_notifiedBaskets.TryGetValue(basket.Item.ItemId, out bool isAlreadyNotified))
                 {
                     if (basket.ItemsAvailable > 0 && !isAlreadyNotified)
                     {
@@ -61,7 +65,7 @@ namespace TooGoodToGoNotifier
                 _emailNotifier.Notify(basketsToNotify);
             }
 
-            _logger.LogInformation($"{nameof(FavoriteBasketsWatcher)} ended");
+            _logger.LogInformation($"{nameof(FavoriteBasketsWatcher)} ended - {_guid}");
         }
     }
 }
