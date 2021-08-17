@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using NLog;
 using NLog.Extensions.Logging;
 using Polly;
+using Polly.Extensions.Http;
 using Polly.Timeout;
 using TooGoodToGoNotifier.Api;
 using TooGoodToGoNotifier.Configuration;
@@ -46,13 +47,16 @@ namespace TooGoodToGoNotifier
                 .AddSingleton<AuthenticationContext>()
                 .AddHostedService<TooGoodToGoNotifierWorker>();
 
-                services
-                .AddHttpClient<ITooGoodToGoService, TooGoodToGoService>()
-                .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(10))
-                .AddTransientHttpErrorPolicy(configurePolicy =>
-                    configurePolicy
+                services.AddHttpClient<ITooGoodToGoService, TooGoodToGoService>()
+                .AddPolicyHandler((services, request) => HttpPolicyExtensions.HandleTransientHttpError()
                     .OrInner<TimeoutRejectedException>()
-                    .WaitAndRetryForeverAsync(retryAttempt => TimeSpan.FromSeconds(retryAttempt * 10)));
+                    .WaitAndRetryForeverAsync(retryAttempt => TimeSpan.FromSeconds(retryAttempt * 10),
+                    onRetry: (_, retryAttempt, timespan) =>
+                    {
+                        services.GetService<ILogger<TooGoodToGoService>>()?.LogWarning($"Transient Http error or timeout occured: delaying for {timespan.TotalSeconds} seconds, then making retry n°{retryAttempt}");
+                    })
+                )
+                .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(10));
             });
     }
 }

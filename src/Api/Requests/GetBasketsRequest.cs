@@ -1,5 +1,4 @@
-﻿using System.Text.Json.Serialization;
-using TooGoodToGoNotifier.Requests;
+﻿using TooGoodToGoNotifier.Requests;
 
 namespace TooGoodToGoNotifier.Api.Requests
 {

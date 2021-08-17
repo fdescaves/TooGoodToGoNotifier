@@ -1,6 +1,4 @@
-﻿using System.Text.Json.Serialization;
-
-namespace TooGoodToGoNotifier.Api.Requests
+﻿namespace TooGoodToGoNotifier.Api.Requests
 {
     public class AuthenticationRequest
     {
