@@ -1,22 +1,22 @@
 # TooGoodToGoNotifier
 
-TooGoodToGoNotifier is a .NET Core console app that send notifications when any of your favorite baskets are available in the TooGoodToGo mobile app.
+TooGoodToGoNotifier is a .NET 5 console application that send email notifications when any of your favorite baskets are available in the TooGoodToGo mobile application.
 
-## How to use
+## How to use it
 
-Start TooGoodToGoNotifier. In the TooGoodToGo mobile app, using the same account as configured in the [appsettings.json](src/appsettings.json) file, mark any baskets as favorite. Notifications will be sent when any of these baskets are available.
+Before anything, follow the configuration instructions explained in the section below. Then, start the TooGoodToGoNotifier application. To function, the application must authenticate to the TooGoodToGo services using your credentials. Therefore, you will receive an email from TooGoodToGo in your inbox and you must click the link to complete the authentication of the TooGoodToGoNotifier. Please note that TooGoodToGoNotifier must be used with the same account that you use to mark your favorite baskets.
+When any of your favorite baskets are available, an email will be sent to any recipients you may have configured in the `Recipients` array of the `EmailNotifierOptions` section.
 
 ## Configuration
 
 Open the [appsettings.json](src/appsettings.json) configuration file:
 
-- Add your TooGoodToGo credentials
+- Add your TooGoodToGo account's email
 
 ```json
   "ApiOptions": {
     "AuthenticationOptions": {
-      "Email": "[TOOGOODTOGO-EMAIL-ACCOUNT]",
-      "Password": "[TOOGOODTOGO-PASSWORD-ACCOUNT]"
+      "Email": "[TOOGOODTOGO-ACCOUNT-EMAIL]"
     }
 ```
 
@@ -33,7 +33,7 @@ Open the [appsettings.json](src/appsettings.json) configuration file:
   }
 ```
 
-- Search for available favorite baskets happens every day every X seconds. **Interval** value must be between 1 and 59. Search is also restricted between the configured range with **StartTime** and **EndTime** parameters.
+- Search for available favorite baskets happens every day every X seconds. **Interval** value must be between 1 and 59. Search is also restricted between the configured range with **StartTime** and **EndTime** parameters. Keep in mind that TooGoodToGo services may throttle you if too many requests are sent.
 
 ```json
   "SchedulerOptions": {
@@ -45,5 +45,5 @@ Open the [appsettings.json](src/appsettings.json) configuration file:
 
 ## Notifications rules
 
-- Only your favorite baskets are notified
+- Only your favorite baskets will be notified
 - Once a basket has been notified, it won't be notified again unless it's seen as out of stock

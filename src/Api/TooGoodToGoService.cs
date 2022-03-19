@@ -124,7 +124,7 @@ namespace TooGoodToGoNotifier.Api
                 await Task.Delay(TimeSpan.FromSeconds(10));
             }
 
-            throw new Exception("");
+            throw new Exception("Attempt to connect to TooGoodToGo services for a full day has failed");
         }
 
         private async Task RefreshAccessToken()
