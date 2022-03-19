@@ -1,6 +1,5 @@
 using System;
 using System.Net.Http;
-using System.Net.Mime;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -42,7 +41,7 @@ namespace TooGoodToGoNotifier.Api
             if (_authenticationContext.LastAuthenticatedOn is null)
             {
                 _logger.LogInformation($"{nameof(AuthenticationContext.LastAuthenticatedOn)} is null => Authenticate");
-                await Authenticate();
+                await AuthenticateByEmail();
             }
             else if (_authenticationContext.LastAuthenticatedOn.Value.AddHours(_apiOptions.RefreshTokenInterval) < DateTime.Now)
             {
@@ -53,7 +52,7 @@ namespace TooGoodToGoNotifier.Api
             var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiOptions.BaseUrl}{_apiOptions.GetItemsEndpoint}");
             request.Headers.Add("Authorization", $"Bearer {_authenticationContext.AccessToken}");
 
-            // When FavoritesOnly is true, origin and radius are ignored but still must be specified.
+            // When FavoritesOnly is true, origin and radius are ignored but must still be specified.
             var getFavoriteBasketsRequest = new GetBasketsRequest
             {
                 UserId = _authenticationContext.UserId.Value,
@@ -71,34 +70,61 @@ namespace TooGoodToGoNotifier.Api
 
             SerializeHttpRequestContentAsJson(request, getFavoriteBasketsRequest);
 
-            var response = await ExecuteAsyncAndThrowIfNotSuccessful(request);
-
-            var getBasketsResponse = await DeserializeHttpResponseAsJson<GetBasketsResponse>(response);
+            GetBasketsResponse getBasketsResponse = await ExecuteAndThrowIfNotSuccessfulAsync<GetBasketsResponse>(request);
 
             return getBasketsResponse;
         }
 
-        public async Task Authenticate()
+        public async Task AuthenticateByEmail()
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiOptions.BaseUrl}{_apiOptions.AuthenticateEndpoint}");
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiOptions.BaseUrl}{_apiOptions.AuthenticateByEmailEndpoint}");
 
-            var authenticationRequest = new AuthenticationRequest
+            var authenticateByEmailRequest = new AuthenticateByEmailRequest
             {
                 DeviceType = "ANDROID",
-                Email = _apiOptions.AuthenticationOptions.Email,
-                Password = _apiOptions.AuthenticationOptions.Password
+                Email = _apiOptions.AuthenticationOptions.Email
             };
 
-            SerializeHttpRequestContentAsJson(request, authenticationRequest);
+            SerializeHttpRequestContentAsJson(request, authenticateByEmailRequest);
 
-            var response = await ExecuteAsyncAndThrowIfNotSuccessful(request);
+            AuthenticateByEmailResponse authenticateByEmailResponse = await ExecuteAndThrowIfNotSuccessfulAsync<AuthenticateByEmailResponse>(request);
 
-            var authenticationResponse = await DeserializeHttpResponseAsJson<AuthenticationResponse>(response);
+            await AuhenticateByPollingId(authenticateByEmailRequest, authenticateByEmailResponse.PollingId);
+        }
 
-            _authenticationContext.AccessToken = authenticationResponse.AccessToken;
-            _authenticationContext.RefreshToken = authenticationResponse.RefreshToken;
-            _authenticationContext.UserId = authenticationResponse.StartupData.User.UserId;
-            _authenticationContext.LastAuthenticatedOn = DateTime.Now;
+        private async Task AuhenticateByPollingId(AuthenticateByEmailRequest authenticateByEmailRequest, string pollingId)
+        {
+            AuthenticateByPollingIdResponse authenticateByPollingIdResponse;
+            DateTime pollingFirstAttempt = DateTime.Now;
+
+            while (DateTime.Now < pollingFirstAttempt.AddDays(1))
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiOptions.BaseUrl}{_apiOptions.AuthenticateByRequestPollingIdEndpoint}");
+
+                var authenticateByPollingIdRequest = new AuthenticateByPollingIdRequest
+                {
+                    DeviceType = authenticateByEmailRequest.DeviceType,
+                    Email = authenticateByEmailRequest.Email,
+                    RequestPollingId = pollingId
+                };
+
+                SerializeHttpRequestContentAsJson(request, authenticateByPollingIdRequest);
+
+                authenticateByPollingIdResponse = await ExecuteAndThrowIfNotSuccessfulAsync<AuthenticateByPollingIdResponse>(request);
+
+                if (authenticateByPollingIdResponse != null)
+                {
+                    _authenticationContext.AccessToken = authenticateByPollingIdResponse.AccessToken;
+                    _authenticationContext.RefreshToken = authenticateByPollingIdResponse.RefreshToken;
+                    _authenticationContext.UserId = authenticateByPollingIdResponse.StartupData.User.UserId;
+                    _authenticationContext.LastAuthenticatedOn = DateTime.Now;
+                    return;
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(10));
+            }
+
+            throw new Exception("");
         }
 
         private async Task RefreshAccessToken()
@@ -112,37 +138,35 @@ namespace TooGoodToGoNotifier.Api
 
             SerializeHttpRequestContentAsJson(request, refreshTokenRequest);
 
-            var response = await ExecuteAsyncAndThrowIfNotSuccessful(request);
-
-            var refreshTokenResponse = await DeserializeHttpResponseAsJson<RefreshTokenResponse>(response);
+            RefreshTokenResponse refreshTokenResponse = await ExecuteAndThrowIfNotSuccessfulAsync<RefreshTokenResponse>(request);
 
             _authenticationContext.AccessToken = refreshTokenResponse.AccessToken;
             _authenticationContext.RefreshToken = refreshTokenResponse.RefreshToken;
             _authenticationContext.LastAuthenticatedOn = DateTime.Now;
         }
 
-        private async Task<HttpResponseMessage> ExecuteAsyncAndThrowIfNotSuccessful(HttpRequestMessage httpRequestMessage)
+        private async Task<T> ExecuteAndThrowIfNotSuccessfulAsync<T>(HttpRequestMessage httpRequestMessage)
         {
-            var response = await _httpClient.SendAsync(httpRequestMessage);
+            HttpResponseMessage response = await _httpClient.SendAsync(httpRequestMessage);
 
             if (!response.IsSuccessStatusCode)
             {
-                var content = await response.Content.ReadAsStringAsync();
+                string content = await response.Content.ReadAsStringAsync();
                 throw new TooGoodToGoRequestException("Error while requesting TooGoodToGo Api", response.StatusCode, content);
             }
 
-            return response;
+            return await DeserializeHttpResponseAsJson<T>(response);
         }
 
         private void SerializeHttpRequestContentAsJson(HttpRequestMessage httpRequestMessage, object content)
         {
-            var serializedObject = JsonConvert.SerializeObject(content, _jsonSerializerSettings);
-            httpRequestMessage.Content = new StringContent(serializedObject, Encoding.UTF8, MediaTypeNames.Application.Json);
+            string serializedObject = JsonConvert.SerializeObject(content, _jsonSerializerSettings);
+            httpRequestMessage.Content = new StringContent(serializedObject, Encoding.UTF8, "application/json");
         }
 
         private async Task<T> DeserializeHttpResponseAsJson<T>(HttpResponseMessage httpResponseMessage)
         {
-            var stringContent = await httpResponseMessage.Content.ReadAsStringAsync();
+            string stringContent = await httpResponseMessage.Content.ReadAsStringAsync();
             return JsonConvert.DeserializeObject<T>(stringContent, _jsonSerializerSettings);
         }
     }

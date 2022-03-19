@@ -4,7 +4,9 @@
     {
         public string BaseUrl { get; set; }
 
-        public string AuthenticateEndpoint { get; set; }
+        public string AuthenticateByEmailEndpoint { get; set; }
+
+        public string AuthenticateByRequestPollingIdEndpoint { get; set; }
 
         public string RefreshTokenEndpoint { get; set; }
 

@@ -1,6 +1,6 @@
 ﻿namespace TooGoodToGoNotifier.Api.Responses
 {
-    public class AuthenticationResponse
+    public class AuthenticateByPollingIdResponse
     {
         public string AccessToken { get; set; }
 

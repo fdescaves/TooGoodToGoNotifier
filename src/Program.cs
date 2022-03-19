@@ -1,4 +1,5 @@
 using System;
+using System.Net;
 using System.Net.Http;
 using Coravel;
 using Microsoft.Extensions.Configuration;
@@ -30,8 +31,7 @@ namespace TooGoodToGoNotifier
             })
             .ConfigureLogging((hostingContext, logging) =>
             {
-                logging
-                .ClearProviders()
+                logging.ClearProviders()
                 .AddNLog();
             })
             .ConfigureServices((host, services) =>
@@ -47,13 +47,17 @@ namespace TooGoodToGoNotifier
                 .AddSingleton<AuthenticationContext>()
                 .AddHostedService<TooGoodToGoNotifierWorker>();
 
-                services.AddHttpClient<ITooGoodToGoService, TooGoodToGoService>()
-                .AddPolicyHandler((services, request) => HttpPolicyExtensions.HandleTransientHttpError()
+                services.AddHttpClient<ITooGoodToGoService, TooGoodToGoService>(httpClient =>
+                {
+                    httpClient.DefaultRequestHeaders.Add("User-Agent", "TGTG/22.2.3 Dalvik/2.1.0 (Linux; U; Android 11; sdk_gphone_x86_arm Build/RSR1.201013.001)");
+                })
+                .AddPolicyHandler((serviceProvider, _) => HttpPolicyExtensions.HandleTransientHttpError()
                     .OrInner<TimeoutRejectedException>()
-                    .WaitAndRetryForeverAsync(retryAttempt => TimeSpan.FromSeconds(retryAttempt * 10),
+                    .OrResult(httpResponseMessage => httpResponseMessage.StatusCode == HttpStatusCode.TooManyRequests)
+                    .WaitAndRetryForeverAsync(retryAttempt => TimeSpan.FromSeconds(30 * retryAttempt),
                     onRetry: (_, retryAttempt, timespan) =>
                     {
-                        services.GetService<ILogger<TooGoodToGoService>>()?.LogWarning($"Transient Http error or timeout occured: delaying for {timespan.TotalSeconds} seconds, then making retry n°{retryAttempt}");
+                        serviceProvider.GetService<ILogger<TooGoodToGoService>>().LogWarning($"Transient Http, timeout or too many attempts error occured: delaying for {timespan.TotalSeconds} seconds, then making retry n°{retryAttempt}");
                     })
                 )
                 .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(10));
