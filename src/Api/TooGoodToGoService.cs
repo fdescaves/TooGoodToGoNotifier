@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -77,6 +77,8 @@ namespace TooGoodToGoNotifier.Api
 
         public async Task AuthenticateByEmail()
         {
+            _logger.LogInformation($"Starting email authentication procedure");
+
             var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiOptions.BaseUrl}{_apiOptions.AuthenticateByEmailEndpoint}");
 
             var authenticateByEmailRequest = new AuthenticateByEmailRequest
@@ -90,15 +92,19 @@ namespace TooGoodToGoNotifier.Api
             AuthenticateByEmailResponse authenticateByEmailResponse = await ExecuteAndThrowIfNotSuccessfulAsync<AuthenticateByEmailResponse>(request);
 
             await AuhenticateByPollingId(authenticateByEmailRequest, authenticateByEmailResponse.PollingId);
+
+            _logger.LogInformation($"Ending email authentication procedure");
         }
 
         private async Task AuhenticateByPollingId(AuthenticateByEmailRequest authenticateByEmailRequest, string pollingId)
         {
+            int pollingAttempts = 0;
             AuthenticateByPollingIdResponse authenticateByPollingIdResponse;
-            DateTime pollingFirstAttempt = DateTime.Now;
-
-            while (DateTime.Now < pollingFirstAttempt.AddDays(1))
+            while (true)
             {
+                pollingAttempts++;
+                _logger.LogInformation("PollingId request attempt n°{pollingAttempts}", pollingAttempts);
+
                 var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiOptions.BaseUrl}{_apiOptions.AuthenticateByRequestPollingIdEndpoint}");
 
                 var authenticateByPollingIdRequest = new AuthenticateByPollingIdRequest
@@ -121,10 +127,8 @@ namespace TooGoodToGoNotifier.Api
                     return;
                 }
 
-                await Task.Delay(TimeSpan.FromSeconds(10));
+                await Task.Delay(TimeSpan.FromSeconds(15));
             }
-
-            throw new Exception("Attempt to connect to TooGoodToGo services for a full day has failed");
         }
 
         private async Task RefreshAccessToken()
@@ -148,26 +152,20 @@ namespace TooGoodToGoNotifier.Api
         private async Task<T> ExecuteAndThrowIfNotSuccessfulAsync<T>(HttpRequestMessage httpRequestMessage)
         {
             HttpResponseMessage response = await _httpClient.SendAsync(httpRequestMessage);
+            string httpResponseContent = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
             {
-                string content = await response.Content.ReadAsStringAsync();
-                throw new TooGoodToGoRequestException("Error while requesting TooGoodToGo Api", response.StatusCode, content);
+                throw new TooGoodToGoRequestException("Error while requesting TooGoodToGo Api", response.StatusCode, httpResponseContent);
             }
 
-            return await DeserializeHttpResponseAsJson<T>(response);
+            return JsonConvert.DeserializeObject<T>(httpResponseContent, _jsonSerializerSettings);
         }
 
         private void SerializeHttpRequestContentAsJson(HttpRequestMessage httpRequestMessage, object content)
         {
             string serializedObject = JsonConvert.SerializeObject(content, _jsonSerializerSettings);
             httpRequestMessage.Content = new StringContent(serializedObject, Encoding.UTF8, "application/json");
-        }
-
-        private async Task<T> DeserializeHttpResponseAsJson<T>(HttpResponseMessage httpResponseMessage)
-        {
-            string stringContent = await httpResponseMessage.Content.ReadAsStringAsync();
-            return JsonConvert.DeserializeObject<T>(stringContent, _jsonSerializerSettings);
         }
     }
 }
