@@ -13,14 +13,14 @@ namespace TooGoodToGoNotifier
     {
         private readonly ILogger<TooGoodToGoNotifierWorker> _logger;
         private readonly IServiceProvider _serviceProvider;
-        private readonly SchedulerOptions _schedulerOptions;
+        private readonly NotifierOptions _notifierOptions;
         private readonly IHostApplicationLifetime _hostApplicationLifetime;
 
-        public TooGoodToGoNotifierWorker(ILogger<TooGoodToGoNotifierWorker> logger, IHostApplicationLifetime hostApplicationLifetime, IServiceProvider serviceProvider, IOptions<SchedulerOptions> schedulerOptions)
+        public TooGoodToGoNotifierWorker(ILogger<TooGoodToGoNotifierWorker> logger, IHostApplicationLifetime hostApplicationLifetime, IServiceProvider serviceProvider, IOptions<NotifierOptions> notifierOptions)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
-            _schedulerOptions = schedulerOptions.Value;
+            _notifierOptions = notifierOptions.Value;
             _hostApplicationLifetime = hostApplicationLifetime;
         }
 
@@ -29,13 +29,13 @@ namespace TooGoodToGoNotifier
             Task<bool> CurrentTimeIsBetweenConfiguredRange()
             {
                 var currentTime = DateTime.Now.TimeOfDay;
-                return Task.FromResult(currentTime >= _schedulerOptions.StartTime && currentTime <= _schedulerOptions.EndTime);
+                return Task.FromResult(currentTime >= _notifierOptions.StartTime && currentTime <= _notifierOptions.EndTime);
             }
 
             _serviceProvider.UseScheduler(scheduler =>
             {
                 scheduler.Schedule<FavoriteBasketsWatcher>()
-                .EverySeconds(_schedulerOptions.Interval)
+                .EverySeconds(_notifierOptions.Interval)
                 .When(CurrentTimeIsBetweenConfiguredRange)
                 .Zoned(TimeZoneInfo.Local)
                 .PreventOverlapping(nameof(FavoriteBasketsWatcher));

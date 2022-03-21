@@ -1,8 +1,8 @@
 ﻿using System;
 
-namespace TooGoodToGoNotifier
+namespace TooGoodToGoNotifier.Api
 {
-    public class AuthenticationContext
+    public class TooGoodToGoApiContext
     {
         public string AccessToken { get; set; }
 

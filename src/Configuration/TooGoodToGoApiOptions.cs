@@ -1,6 +1,6 @@
 ﻿namespace TooGoodToGoNotifier.Configuration
 {
-    public class ApiOptions
+    public class TooGoodToGoApiOptions
     {
         public string BaseUrl { get; set; }
 
@@ -14,6 +14,6 @@
 
         public int RefreshTokenInterval { get; set; }
 
-        public AuthenticationOptions AuthenticationOptions { get; set; }
+        public string AccountEmail { get; set; }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace TooGoodToGoNotifier.Configuration
 {
-    public class EmailNotifierOptions
+    public class EmailServiceOptions
     {
         public string SmtpServer { get; set; }
 
@@ -11,7 +11,5 @@
         public string SmtpUserName { get; set; }
 
         public string SmtpPassword { get; set; }
-
-        public string[] Recipients { get; set; }
     }
 }

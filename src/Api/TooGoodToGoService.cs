@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,17 +19,19 @@ namespace TooGoodToGoNotifier.Api
     public class TooGoodToGoService : ITooGoodToGoService
     {
         private readonly ILogger _logger;
-        private readonly ApiOptions _apiOptions;
+        private readonly TooGoodToGoApiOptions _apiOptions;
         private readonly HttpClient _httpClient;
-        private readonly AuthenticationContext _authenticationContext;
+        private readonly CookieContainer _cookieContainer;
+        private readonly TooGoodToGoApiContext _tooGoodToGoApiContext;
         private readonly JsonSerializerSettings _jsonSerializerSettings;
 
-        public TooGoodToGoService(ILogger<TooGoodToGoService> logger, IOptions<ApiOptions> apiOptions, HttpClient httpClient, AuthenticationContext authenticationContext)
+        public TooGoodToGoService(ILogger<TooGoodToGoService> logger, IOptions<TooGoodToGoApiOptions> apiOptions, HttpClient httpClient, CookieContainer cookieContainer, TooGoodToGoApiContext tooGoodToGoApiContext)
         {
             _logger = logger;
             _apiOptions = apiOptions.Value;
             _httpClient = httpClient;
-            _authenticationContext = authenticationContext;
+            _cookieContainer = cookieContainer;
+            _tooGoodToGoApiContext = tooGoodToGoApiContext;
             _jsonSerializerSettings = new JsonSerializerSettings
             {
                 ContractResolver = new RequireObjectPropertiesContractResolver
@@ -38,24 +43,24 @@ namespace TooGoodToGoNotifier.Api
 
         public async Task<GetBasketsResponse> GetFavoriteBaskets()
         {
-            if (_authenticationContext.LastAuthenticatedOn is null)
+            if (_tooGoodToGoApiContext.LastAuthenticatedOn is null)
             {
-                _logger.LogInformation($"{nameof(AuthenticationContext.LastAuthenticatedOn)} is null => Authenticate");
+                _logger.LogInformation($"{nameof(TooGoodToGoApiContext.LastAuthenticatedOn)} is null => Authenticate");
                 await AuthenticateByEmail();
             }
-            else if (_authenticationContext.LastAuthenticatedOn.Value.AddHours(_apiOptions.RefreshTokenInterval) < DateTime.Now)
+            else if (_tooGoodToGoApiContext.LastAuthenticatedOn.Value.AddHours(_apiOptions.RefreshTokenInterval) < DateTime.Now)
             {
-                _logger.LogInformation($"{nameof(AuthenticationContext)} is expired => Refresh");
+                _logger.LogInformation($"{nameof(TooGoodToGoApiContext)} is expired => Refresh");
                 await RefreshAccessToken();
             }
 
             var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiOptions.BaseUrl}{_apiOptions.GetItemsEndpoint}");
-            request.Headers.Add("Authorization", $"Bearer {_authenticationContext.AccessToken}");
+            request.Headers.Add("Authorization", $"Bearer {_tooGoodToGoApiContext.AccessToken}");
 
             // When FavoritesOnly is true, origin and radius are ignored but must still be specified.
             var getFavoriteBasketsRequest = new GetBasketsRequest
             {
-                UserId = _authenticationContext.UserId.Value,
+                UserId = _tooGoodToGoApiContext.UserId.Value,
                 Origin = new Origin
                 {
                     Latitude = 0,
@@ -84,7 +89,7 @@ namespace TooGoodToGoNotifier.Api
             var authenticateByEmailRequest = new AuthenticateByEmailRequest
             {
                 DeviceType = "ANDROID",
-                Email = _apiOptions.AuthenticationOptions.Email
+                Email = _apiOptions.AccountEmail
             };
 
             SerializeHttpRequestContentAsJson(request, authenticateByEmailRequest);
@@ -120,10 +125,10 @@ namespace TooGoodToGoNotifier.Api
 
                 if (authenticateByPollingIdResponse != null)
                 {
-                    _authenticationContext.AccessToken = authenticateByPollingIdResponse.AccessToken;
-                    _authenticationContext.RefreshToken = authenticateByPollingIdResponse.RefreshToken;
-                    _authenticationContext.UserId = authenticateByPollingIdResponse.StartupData.User.UserId;
-                    _authenticationContext.LastAuthenticatedOn = DateTime.Now;
+                    _tooGoodToGoApiContext.AccessToken = authenticateByPollingIdResponse.AccessToken;
+                    _tooGoodToGoApiContext.RefreshToken = authenticateByPollingIdResponse.RefreshToken;
+                    _tooGoodToGoApiContext.UserId = authenticateByPollingIdResponse.StartupData.User.UserId;
+                    _tooGoodToGoApiContext.LastAuthenticatedOn = DateTime.Now;
                     return;
                 }
 
@@ -137,21 +142,22 @@ namespace TooGoodToGoNotifier.Api
 
             var refreshTokenRequest = new RefreshTokenRequest
             {
-                RefreshToken = _authenticationContext.RefreshToken
+                RefreshToken = _tooGoodToGoApiContext.RefreshToken
             };
 
             SerializeHttpRequestContentAsJson(request, refreshTokenRequest);
 
             RefreshTokenResponse refreshTokenResponse = await ExecuteAndThrowIfNotSuccessfulAsync<RefreshTokenResponse>(request);
 
-            _authenticationContext.AccessToken = refreshTokenResponse.AccessToken;
-            _authenticationContext.RefreshToken = refreshTokenResponse.RefreshToken;
-            _authenticationContext.LastAuthenticatedOn = DateTime.Now;
+            _tooGoodToGoApiContext.AccessToken = refreshTokenResponse.AccessToken;
+            _tooGoodToGoApiContext.RefreshToken = refreshTokenResponse.RefreshToken;
+            _tooGoodToGoApiContext.LastAuthenticatedOn = DateTime.Now;
         }
 
         private async Task<T> ExecuteAndThrowIfNotSuccessfulAsync<T>(HttpRequestMessage httpRequestMessage)
         {
             HttpResponseMessage response = await _httpClient.SendAsync(httpRequestMessage);
+
             string httpResponseContent = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)

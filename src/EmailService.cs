@@ -1,51 +1,37 @@
-﻿using System.Collections.Generic;
-using System.Text;
-using MailKit.Net.Smtp;
+﻿using MailKit.Net.Smtp;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
-using TooGoodToGoNotifier.Api.Responses;
 using TooGoodToGoNotifier.Configuration;
 
 namespace TooGoodToGoNotifier
 {
-    public class EmailNotifier : IEmailNotifier
+    public class EmailService : IEmailService
     {
-        private readonly ILogger<EmailNotifier> _logger;
-        private readonly EmailNotifierOptions _emailNotifierOptions;
+        private readonly ILogger<EmailService> _logger;
+        private readonly EmailServiceOptions _emailNotifierOptions;
 
-        public EmailNotifier(ILogger<EmailNotifier> logger, IOptions<EmailNotifierOptions> emailNotifierOptions)
+        public EmailService(ILogger<EmailService> logger, IOptions<EmailServiceOptions> emailNotifierOptions)
         {
             _logger = logger;
             _emailNotifierOptions = emailNotifierOptions.Value;
         }
 
-        public void Notify(List<Basket> baskets)
+        public void SendEmail(string subject, string body, string[] recipients)
         {
-            if (baskets == null || baskets.Count == 0)
-            {
-                return;
-            }
-
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(string.Empty, _emailNotifierOptions.SmtpUserName));
 
-            foreach (var recipient in _emailNotifierOptions.Recipients)
+            foreach (var recipient in recipients)
             {
                 message.To.Add(new MailboxAddress(string.Empty, recipient));
             }
 
-            message.Subject = "New available basket(s)";
-
-            var stringBuilder = new StringBuilder();
-            foreach (var basket in baskets)
-            {
-                stringBuilder.AppendLine($"{basket.ItemsAvailable} basket(s) available at \"{basket.DisplayName}\"");
-            }
+            message.Subject = subject;
 
             message.Body = new TextPart
             {
-                Text = stringBuilder.ToString()
+                Text = body
             };
 
             using var client = new SmtpClient();

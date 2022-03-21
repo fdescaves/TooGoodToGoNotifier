@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Net;
 using System.Net.Http;
 using Coravel;
@@ -36,20 +36,32 @@ namespace TooGoodToGoNotifier
             })
             .ConfigureServices((host, services) =>
             {
+                var cookieContainer = new CookieContainer();
+
                 services.AddLogging()
                 .AddScheduler()
-                .Configure<SchedulerOptions>(host.Configuration.GetSection(nameof(SchedulerOptions)))
-                .Configure<ApiOptions>(host.Configuration.GetSection(nameof(ApiOptions)))
-                .Configure<EmailNotifierOptions>(host.Configuration.GetSection(nameof(EmailNotifierOptions)))
+                .Configure<NotifierOptions>(host.Configuration.GetSection(nameof(NotifierOptions)))
+                .Configure<TooGoodToGoApiOptions>(host.Configuration.GetSection(nameof(TooGoodToGoApiOptions)))
+                .Configure<EmailServiceOptions>(host.Configuration.GetSection(nameof(EmailServiceOptions)))
                 .AddTransient<ITooGoodToGoService, TooGoodToGoService>()
-                .AddTransient<IEmailNotifier, EmailNotifier>()
+                .AddTransient<IEmailService, EmailService>()
                 .AddSingleton<FavoriteBasketsWatcher>()
-                .AddSingleton<AuthenticationContext>()
+                .AddSingleton<TooGoodToGoApiContext>()
+                .AddSingleton(cookieContainer)
                 .AddHostedService<TooGoodToGoNotifierWorker>();
 
                 services.AddHttpClient<ITooGoodToGoService, TooGoodToGoService>(httpClient =>
                 {
+                    httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
                     httpClient.DefaultRequestHeaders.Add("User-Agent", "TGTG/22.2.3 Dalvik/2.1.0 (Linux; U; Android 11; sdk_gphone_x86_arm Build/RSR1.201013.001)");
+                })
+                .ConfigurePrimaryHttpMessageHandler(() =>
+                {
+                    return new HttpClientHandler
+                    {
+                        UseCookies = true,
+                        CookieContainer = cookieContainer
+                    };
                 })
                 .AddPolicyHandler((serviceProvider, _) => HttpPolicyExtensions.HandleTransientHttpError()
                     .OrInner<TimeoutRejectedException>()
@@ -57,7 +69,7 @@ namespace TooGoodToGoNotifier
                     .WaitAndRetryForeverAsync(retryAttempt => TimeSpan.FromSeconds(30 * retryAttempt),
                     onRetry: (_, retryAttempt, timespan) =>
                     {
-                        serviceProvider.GetService<ILogger<TooGoodToGoService>>().LogWarning($"Transient Http, timeout or too many attempts error occured: delaying for {timespan.TotalSeconds} seconds, then making retry n�{retryAttempt}");
+                        serviceProvider.GetService<ILogger<TooGoodToGoService>>().LogWarning($"Transient Http, timeout or too many attempts error occured: delaying for {timespan.TotalSeconds} seconds, then making retry n°{retryAttempt}");
                     })
                 )
                 .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(10));
