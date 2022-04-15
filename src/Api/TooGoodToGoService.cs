@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -12,7 +10,6 @@ using Newtonsoft.Json.Serialization;
 using TooGoodToGoNotifier.Api.Requests;
 using TooGoodToGoNotifier.Api.Responses;
 using TooGoodToGoNotifier.Configuration;
-using TooGoodToGoNotifier.Requests;
 
 namespace TooGoodToGoNotifier.Api
 {
@@ -82,7 +79,7 @@ namespace TooGoodToGoNotifier.Api
 
         public async Task AuthenticateByEmail()
         {
-            _logger.LogInformation($"Starting email authentication procedure");
+            _logger.LogInformation("Starting email authentication procedure");
 
             var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiOptions.BaseUrl}{_apiOptions.AuthenticateByEmailEndpoint}");
 
@@ -98,7 +95,7 @@ namespace TooGoodToGoNotifier.Api
 
             await AuhenticateByPollingId(authenticateByEmailRequest, authenticateByEmailResponse.PollingId);
 
-            _logger.LogInformation($"Ending email authentication procedure");
+            _logger.LogInformation("Ending email authentication procedure");
         }
 
         private async Task AuhenticateByPollingId(AuthenticateByEmailRequest authenticateByEmailRequest, string pollingId)

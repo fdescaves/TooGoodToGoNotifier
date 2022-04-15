@@ -1,6 +1,4 @@
-﻿using TooGoodToGoNotifier.Requests;
-
-namespace TooGoodToGoNotifier.Api.Requests
+﻿namespace TooGoodToGoNotifier.Api.Requests
 {
     public class GetBasketsRequest
     {

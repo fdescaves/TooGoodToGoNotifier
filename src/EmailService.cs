@@ -19,10 +19,12 @@ namespace TooGoodToGoNotifier
 
         public void SendEmail(string subject, string body, string[] recipients)
         {
+            _logger.LogInformation("Sending email to {recipients}", string.Join(", ", recipients));
+
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(string.Empty, _emailNotifierOptions.SmtpUserName));
 
-            foreach (var recipient in recipients)
+            foreach (string recipient in recipients)
             {
                 message.To.Add(new MailboxAddress(string.Empty, recipient));
             }

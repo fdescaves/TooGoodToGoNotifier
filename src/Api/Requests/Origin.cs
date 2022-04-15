@@ -1,4 +1,4 @@
-﻿namespace TooGoodToGoNotifier.Requests
+﻿namespace TooGoodToGoNotifier.Api.Requests
 {
     public class Origin
     {
