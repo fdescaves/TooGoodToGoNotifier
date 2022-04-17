@@ -40,13 +40,14 @@ namespace TooGoodToGoNotifier
 
                 services.AddLogging()
                 .AddScheduler()
-                .Configure<NotifierOptions>(host.Configuration.GetSection(nameof(NotifierOptions)))
+                .Configure<TooGoodToGoNotifierOptions>(host.Configuration.GetSection(nameof(TooGoodToGoNotifierOptions)))
                 .Configure<TooGoodToGoApiOptions>(host.Configuration.GetSection(nameof(TooGoodToGoApiOptions)))
                 .Configure<EmailServiceOptions>(host.Configuration.GetSection(nameof(EmailServiceOptions)))
                 .AddTransient<ITooGoodToGoService, TooGoodToGoService>()
                 .AddTransient<IEmailService, EmailService>()
-                .AddSingleton<FavoriteBasketsWatcher>()
-                .AddSingleton<TooGoodToGoApiContext>()
+                .AddTransient<FavoriteBasketsWatcherJob>()
+                .AddTransient<RefreshAccessTokenJob>()
+                .AddSingleton<Context>()
                 .AddSingleton(cookieContainer)
                 .AddHostedService<TooGoodToGoNotifierWorker>();
 
@@ -63,16 +64,19 @@ namespace TooGoodToGoNotifier
                         CookieContainer = cookieContainer
                     };
                 })
-                .AddPolicyHandler((serviceProvider, _) => HttpPolicyExtensions.HandleTransientHttpError()
-                    .OrInner<TimeoutRejectedException>()
-                    .OrResult(httpResponseMessage => httpResponseMessage.StatusCode == HttpStatusCode.TooManyRequests)
-                    .WaitAndRetryForeverAsync(retryAttempt => TimeSpan.FromSeconds(30 * retryAttempt),
-                    onRetry: (_, retryAttempt, timespan) =>
-                    {
-                        serviceProvider.GetService<ILogger<TooGoodToGoService>>().LogWarning("Transient Http, timeout or too many attempts error occured: delaying for {seconds} seconds, then making retry n°{retryAttemptNumber}", timespan.TotalSeconds, retryAttempt);
-                    })
-                )
+                .AddPolicyHandler(GetWaitAndRetryForeverPolicy)
                 .AddPolicyHandler(Policy.TimeoutAsync<HttpResponseMessage>(10));
             });
+
+        private static IAsyncPolicy<HttpResponseMessage> GetWaitAndRetryForeverPolicy(IServiceProvider serviceProvider, HttpRequestMessage httpRequestMessage)
+        {
+            return HttpPolicyExtensions.HandleTransientHttpError()
+                .OrInner<TimeoutRejectedException>()
+                .OrResult(httpResponseMessage => httpResponseMessage.StatusCode == HttpStatusCode.TooManyRequests)
+                .WaitAndRetryForeverAsync(retryAttempt => TimeSpan.FromSeconds(30 * retryAttempt), (_, retryAttempt, timespan) =>
+                {
+                    serviceProvider.GetService<ILogger<TooGoodToGoService>>().LogWarning("Transient Http, timeout or too many attempts error occured: delaying for {seconds} seconds, then making retry n°{retryAttemptNumber}", timespan.TotalSeconds, retryAttempt);
+                });
+        }
     }
 }

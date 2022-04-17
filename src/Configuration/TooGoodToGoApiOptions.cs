@@ -12,8 +12,6 @@
 
         public string GetItemsEndpoint { get; set; }
 
-        public int RefreshTokenInterval { get; set; }
-
         public string AccountEmail { get; set; }
     }
 }

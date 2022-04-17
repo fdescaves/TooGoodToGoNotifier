@@ -5,6 +5,8 @@ using Coravel;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using TooGoodToGoNotifier.Api;
+using TooGoodToGoNotifier.Api.Responses;
 using TooGoodToGoNotifier.Configuration;
 
 namespace TooGoodToGoNotifier
@@ -13,40 +15,79 @@ namespace TooGoodToGoNotifier
     {
         private readonly ILogger<TooGoodToGoNotifierWorker> _logger;
         private readonly IServiceProvider _serviceProvider;
-        private readonly NotifierOptions _notifierOptions;
         private readonly IHostApplicationLifetime _hostApplicationLifetime;
+        private readonly TooGoodToGoNotifierOptions _tooGoodToGoNotifierOptions;
+        private readonly ITooGoodToGoService _tooGoodToGoService;
+        private readonly Context _context;
 
-        public TooGoodToGoNotifierWorker(ILogger<TooGoodToGoNotifierWorker> logger, IHostApplicationLifetime hostApplicationLifetime, IServiceProvider serviceProvider, IOptions<NotifierOptions> notifierOptions)
+        public TooGoodToGoNotifierWorker(ILogger<TooGoodToGoNotifierWorker> logger, IHostApplicationLifetime hostApplicationLifetime, IServiceProvider serviceProvider, IOptions<TooGoodToGoNotifierOptions> tooGoodToGoNotifierOptions, ITooGoodToGoService tooGoodToGoService, Context context)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
-            _notifierOptions = notifierOptions.Value;
             _hostApplicationLifetime = hostApplicationLifetime;
+            _tooGoodToGoNotifierOptions = tooGoodToGoNotifierOptions.Value;
+            _tooGoodToGoService = tooGoodToGoService;
+            _context = context;
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        protected override async Task ExecuteAsync(CancellationToken cancellationToken)
         {
-            Task<bool> CurrentTimeIsBetweenConfiguredRange()
-            {
-                var currentTime = DateTime.Now.TimeOfDay;
-                return Task.FromResult(currentTime >= _notifierOptions.StartTime && currentTime <= _notifierOptions.EndTime);
-            }
+            await AuthenticateToTooGoodToGoServices();
 
             _serviceProvider.UseScheduler(scheduler =>
             {
-                scheduler.Schedule<FavoriteBasketsWatcher>()
-                .EverySeconds(_notifierOptions.Interval)
-                .When(CurrentTimeIsBetweenConfiguredRange)
+                // Scheduling job to watch for available baskets
+                scheduler.Schedule<FavoriteBasketsWatcherJob>()
+                .EverySeconds(_tooGoodToGoNotifierOptions.Interval)
+                .When(CurrentTimeIsBetweenConfiguredRangeAsync)
                 .Zoned(TimeZoneInfo.Local)
-                .PreventOverlapping(nameof(FavoriteBasketsWatcher));
+                .PreventOverlapping(nameof(FavoriteBasketsWatcherJob));
+
+                // Scheduling job to refresh access token
+                scheduler.Schedule<RefreshAccessTokenJob>()
+                .Cron(_tooGoodToGoNotifierOptions.RefreshAccessTokenCronExpression)
+                .Zoned(TimeZoneInfo.Local);
             })
             .OnError((exception) =>
             {
                 _logger.LogCritical(exception, "Critical error occured");
                 _hostApplicationLifetime.StopApplication();
             });
+        }
 
-            return Task.CompletedTask;
+        private async Task AuthenticateToTooGoodToGoServices()
+        {
+            _logger.LogInformation("TooGoodToGoNotifier isn't authenticated, authenticating to TooGoodToGo's services");
+
+            AuthenticateByEmailResponse authenticateByEmailResponse = await _tooGoodToGoService.AuthenticateByEmailAsync();
+
+            int pollingAttempts = 0;
+            AuthenticateByPollingIdResponse authenticateByPollingIdResponse;
+            while (true)
+            {
+                pollingAttempts++;
+                _logger.LogInformation("PollingId request attempt n°{pollingAttempts}", pollingAttempts);
+
+                authenticateByPollingIdResponse = await _tooGoodToGoService.AuhenticateByPollingIdAsync(authenticateByEmailResponse.PollingId);
+
+                if (authenticateByPollingIdResponse != null)
+                {
+                    _context.AccessToken = authenticateByPollingIdResponse.AccessToken;
+                    _context.RefreshToken = authenticateByPollingIdResponse.RefreshToken;
+                    _context.UserId = authenticateByPollingIdResponse.StartupData.User.UserId;
+                    break;
+                }
+
+                await Task.Delay(TimeSpan.FromSeconds(15));
+            }
+
+            _logger.LogInformation("Ended authenticating to TooGoodToGo's services");
+        }
+
+        private Task<bool> CurrentTimeIsBetweenConfiguredRangeAsync()
+        {
+            TimeSpan currentTime = DateTime.Now.TimeOfDay;
+            return Task.FromResult(currentTime >= _tooGoodToGoNotifierOptions.StartTime && currentTime <= _tooGoodToGoNotifierOptions.EndTime);
         }
     }
 }
