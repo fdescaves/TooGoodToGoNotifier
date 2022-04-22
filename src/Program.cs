@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Net;
 using System.Net.Http;
+using System.Threading.Tasks;
 using Coravel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -53,6 +54,7 @@ namespace TooGoodToGoNotifier
 
                 services.AddHttpClient<ITooGoodToGoService, TooGoodToGoService>(httpClient =>
                 {
+                    httpClient.Timeout = System.Threading.Timeout.InfiniteTimeSpan;
                     httpClient.DefaultRequestHeaders.Add("Accept", "application/json");
                     httpClient.DefaultRequestHeaders.Add("User-Agent", "TGTG/22.2.3 Dalvik/2.1.0 (Linux; U; Android 11; sdk_gphone_x86_arm Build/RSR1.201013.001)");
                 })
