@@ -2,9 +2,9 @@
 
 namespace TooGoodToGoNotifier.Configuration
 {
-    public class TooGoodToGoNotifierOptions
+    public class NotifierOptions
     {
-        public int Interval { get; set; }
+        public int ScanningInterval { get; set; }
 
         public string RefreshAccessTokenCronExpression { get; set; }
 

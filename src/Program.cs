@@ -1,7 +1,6 @@
-using System;
+﻿using System;
 using System.Net;
 using System.Net.Http;
-using System.Threading.Tasks;
 using Coravel;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -41,7 +40,7 @@ namespace TooGoodToGoNotifier
 
                 services.AddLogging()
                 .AddScheduler()
-                .Configure<TooGoodToGoNotifierOptions>(host.Configuration.GetSection(nameof(TooGoodToGoNotifierOptions)))
+                .Configure<NotifierOptions>(host.Configuration.GetSection(nameof(NotifierOptions)))
                 .Configure<TooGoodToGoApiOptions>(host.Configuration.GetSection(nameof(TooGoodToGoApiOptions)))
                 .Configure<EmailServiceOptions>(host.Configuration.GetSection(nameof(EmailServiceOptions)))
                 .AddTransient<ITooGoodToGoService, TooGoodToGoService>()

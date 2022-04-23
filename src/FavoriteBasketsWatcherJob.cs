@@ -15,13 +15,13 @@ namespace TooGoodToGoNotifier
     public class FavoriteBasketsWatcherJob : IInvocable
     {
         private readonly ILogger _logger;
-        private readonly TooGoodToGoNotifierOptions _notifierOptions;
+        private readonly NotifierOptions _notifierOptions;
         private readonly ITooGoodToGoService _tooGoodToGoService;
         private readonly IEmailService _emailService;
         private readonly Context _context;
         private readonly Guid _guid;
 
-        public FavoriteBasketsWatcherJob(ILogger<FavoriteBasketsWatcherJob> logger, IOptions<TooGoodToGoNotifierOptions> notifierOptions, ITooGoodToGoService tooGoodToGoService, IEmailService emailService, Context context)
+        public FavoriteBasketsWatcherJob(ILogger<FavoriteBasketsWatcherJob> logger, IOptions<NotifierOptions> notifierOptions, ITooGoodToGoService tooGoodToGoService, IEmailService emailService, Context context)
         {
             _logger = logger;
             _notifierOptions = notifierOptions.Value;

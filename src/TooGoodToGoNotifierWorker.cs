@@ -16,16 +16,16 @@ namespace TooGoodToGoNotifier
         private readonly ILogger<TooGoodToGoNotifierWorker> _logger;
         private readonly IServiceProvider _serviceProvider;
         private readonly IHostApplicationLifetime _hostApplicationLifetime;
-        private readonly TooGoodToGoNotifierOptions _tooGoodToGoNotifierOptions;
+        private readonly NotifierOptions _notifierOptions;
         private readonly ITooGoodToGoService _tooGoodToGoService;
         private readonly Context _context;
 
-        public TooGoodToGoNotifierWorker(ILogger<TooGoodToGoNotifierWorker> logger, IHostApplicationLifetime hostApplicationLifetime, IServiceProvider serviceProvider, IOptions<TooGoodToGoNotifierOptions> tooGoodToGoNotifierOptions, ITooGoodToGoService tooGoodToGoService, Context context)
+        public TooGoodToGoNotifierWorker(ILogger<TooGoodToGoNotifierWorker> logger, IHostApplicationLifetime hostApplicationLifetime, IServiceProvider serviceProvider, IOptions<NotifierOptions> notifierOptions, ITooGoodToGoService tooGoodToGoService, Context context)
         {
             _logger = logger;
             _serviceProvider = serviceProvider;
             _hostApplicationLifetime = hostApplicationLifetime;
-            _tooGoodToGoNotifierOptions = tooGoodToGoNotifierOptions.Value;
+            _notifierOptions = notifierOptions.Value;
             _tooGoodToGoService = tooGoodToGoService;
             _context = context;
         }
@@ -38,14 +38,14 @@ namespace TooGoodToGoNotifier
             {
                 // Scheduling job to watch for available baskets
                 scheduler.Schedule<FavoriteBasketsWatcherJob>()
-                .EverySeconds(_tooGoodToGoNotifierOptions.Interval)
+                .EverySeconds(_notifierOptions.ScanningInterval)
                 .When(CurrentTimeIsBetweenConfiguredRangeAsync)
                 .Zoned(TimeZoneInfo.Local)
                 .PreventOverlapping(nameof(FavoriteBasketsWatcherJob));
 
                 // Scheduling job to refresh access token
                 scheduler.Schedule<RefreshAccessTokenJob>()
-                .Cron(_tooGoodToGoNotifierOptions.RefreshAccessTokenCronExpression)
+                .Cron(_notifierOptions.RefreshAccessTokenCronExpression)
                 .Zoned(TimeZoneInfo.Local);
             })
             .OnError((exception) =>
@@ -87,7 +87,7 @@ namespace TooGoodToGoNotifier
         private Task<bool> CurrentTimeIsBetweenConfiguredRangeAsync()
         {
             TimeSpan currentTime = DateTime.Now.TimeOfDay;
-            return Task.FromResult(currentTime >= _tooGoodToGoNotifierOptions.StartTime && currentTime <= _tooGoodToGoNotifierOptions.EndTime);
+            return Task.FromResult(currentTime >= _notifierOptions.StartTime && currentTime <= _notifierOptions.EndTime);
         }
     }
 }
