@@ -2,6 +2,12 @@
 
 TooGoodToGoNotifier is a .NET 6 console application that send email notifications when any of your favourite baskets are available in the TooGoodToGo mobile app. The idea was to overcome the lack of notification functionality when a basket is available. This application is designed to be used on a device that is constantly running in order to avoid the tedious authentication procedure that requires human interaction.
 
+## Prerequisites
+
+- a TooGoodToGo account
+- an email account that will be used to send notifications
+- .NET 6 runtime unless a self-contained release is used
+
 ## Configuration
 
 Open the [appsettings.json](src/appsettings.json) configuration file:
