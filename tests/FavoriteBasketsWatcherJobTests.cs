@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
@@ -25,6 +26,7 @@ namespace TooGoodToGoNotifier.Tests
             _loggerMock = new Mock<ILogger<FavoriteBasketsWatcherJob>>();
             _notifierOptions = Options.Create(new NotifierOptions
             {
+                DefaultRecipients = new string[] { "default@recipient.com" },
                 SubscribedRecipientsByBasketId = new Dictionary<string, string[]>
                 {
                     {
@@ -34,6 +36,10 @@ namespace TooGoodToGoNotifier.Tests
                     {
                         "1002",
                         new string[] { "bar@bar.com" }
+                    },
+                    {
+                        "1003",
+                        Array.Empty<string>()
                     }
                 }
             });
@@ -70,6 +76,37 @@ namespace TooGoodToGoNotifier.Tests
             await _favoriteBasketsWatcherJob.Invoke();
 
             _emailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.Is<string[]>(x => Enumerable.SequenceEqual(x, expectedRecipients))), Times.Once);
+        }
+
+        [Fact]
+        public async Task WhenBasketSeenAsAvailableOnceAndIsntFilteredShouldSendEmailToDefaultRecipients()
+        {
+            MockGetBasketsResponse(1000, 1);
+
+            await _favoriteBasketsWatcherJob.Invoke();
+
+            _emailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.Is<string[]>(x => Enumerable.SequenceEqual(x, _notifierOptions.Value.DefaultRecipients))), Times.Once);
+        }
+
+        [Fact]
+        public async Task WhenBasketSeenAsAvailableOnceAndRecipientsArrayIsEmptyShouldntSendEmail()
+        {
+            MockGetBasketsResponse(1003, 1);
+
+            await _favoriteBasketsWatcherJob.Invoke();
+
+            _emailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string[]>()), Times.Never);
+        }
+
+        [Fact]
+        public async Task WhenBasketSeenAsAvailableOnceAndIsntFilteredAndDefaultRecipientsArrayIsEmptyShouldntSendEmail()
+        {
+            _notifierOptions.Value.DefaultRecipients = Array.Empty<string>();
+            MockGetBasketsResponse(1000, 1);
+
+            await _favoriteBasketsWatcherJob.Invoke();
+
+            _emailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string[]>()), Times.Never);
         }
 
         [Theory]

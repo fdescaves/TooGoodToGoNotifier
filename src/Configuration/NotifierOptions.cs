@@ -13,6 +13,8 @@ namespace TooGoodToGoNotifier.Configuration
 
         public TimeSpan EndTime { get; set; }
 
-        public Dictionary<string, string[]> SubscribedRecipientsByBasketId { get; set; }
+        public string[] DefaultRecipients { get; set; } = Array.Empty<string>();
+
+        public Dictionary<string, string[]> SubscribedRecipientsByBasketId { get; set; } = new Dictionary<string, string[]>();
     }
 }

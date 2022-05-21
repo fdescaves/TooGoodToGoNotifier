@@ -62,14 +62,18 @@ namespace TooGoodToGoNotifier
 
         private async Task NotifyBasket(Basket basket)
         {
-            if (_notifierOptions.SubscribedRecipientsByBasketId.TryGetValue(basket.Item.ItemId.ToString(), out string[] recipients) && recipients.Length > 0)
+            string basketIdAsString = basket.Item.ItemId.ToString();
+            bool isFiltered = _notifierOptions.SubscribedRecipientsByBasketId.ContainsKey(basketIdAsString);
+            string[] recipients = isFiltered ? _notifierOptions.SubscribedRecipientsByBasketId[basketIdAsString] : _notifierOptions.DefaultRecipients;
+
+            if (recipients.Length > 0)
             {
                 _logger.LogInformation("{basketToNotify} will be notified to: {Recipients}", basket.DisplayName, recipients);
                 await _emailService.SendEmailAsync("New basket(s)", $"{basket.ItemsAvailable} basket(s) available at \"{basket.DisplayName}\"", recipients);
             }
             else
             {
-                _logger.LogWarning("{basketToNotifyId} isn't filtered, email notifications won't be sent", basket.Item.ItemId);
+                _logger.LogWarning("{basketToNotifyId} has no notification recipients", basket.Item.ItemId);
             }
         }
     }
