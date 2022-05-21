@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Coravel.Invocable;
 using Microsoft.Extensions.Logging;
@@ -40,44 +38,39 @@ namespace TooGoodToGoNotifier
             var basketsToNotify = new List<Basket>();
             foreach (Basket basket in getBasketsResponse.Items)
             {
-                _logger.LogDebug("Basket N°{ItemId} | DisplayName: \"{DisplayName}\" | AvailableItems: {ItemsAvailable}", basket.Item.ItemId, basket.DisplayName, basket.ItemsAvailable);
-
                 if (_context.NotifiedBaskets.TryGetValue(basket.Item.ItemId, out bool isAlreadyNotified))
                 {
                     if (basket.ItemsAvailable > 0 && !isAlreadyNotified)
                     {
-                        _logger.LogDebug("Basket N°{ItemId} restock will be notified", basket.Item.ItemId);
-                        basketsToNotify.Add(basket);
+                        await NotifyBasket(basket);
                         _context.NotifiedBaskets[basket.Item.ItemId] = true;
                     }
                     else if (basket.ItemsAvailable == 0 && isAlreadyNotified)
                     {
-                        _logger.LogDebug("Basket N°{ItemId} was previously notified and is now out of stock, notification will be reset", basket.Item.ItemId);
                         _context.NotifiedBaskets[basket.Item.ItemId] = false;
                     }
                 }
                 else if (basket.ItemsAvailable > 0)
                 {
-                    _logger.LogDebug("Basket N°{ItemId} is available for the first time, it will be notified", basket.Item.ItemId);
-                    basketsToNotify.Add(basket);
+                    await NotifyBasket(basket);
                     _context.NotifiedBaskets.Add(basket.Item.ItemId, true);
                 }
             }
 
-            if (basketsToNotify.Count > 0 && _notifierOptions.Recipients.Length > 0)
-            {
-                _logger.LogInformation("{BasketsCount} basket(s) will be notified: {basketsToNotify}", basketsToNotify.Count, string.Join(" | ", basketsToNotify.Select(x => x.DisplayName)));
-
-                var stringBuilder = new StringBuilder();
-                foreach (var basket in basketsToNotify)
-                {
-                    stringBuilder.AppendLine($"{basket.ItemsAvailable} basket(s) available at \"{basket.DisplayName}\"");
-                }
-
-                _emailService.SendEmail("New basket(s)", stringBuilder.ToString(), _notifierOptions.Recipients);
-            }
-
             _logger.LogInformation($"{nameof(FavoriteBasketsWatcherJob)} ended - {{Guid}}", _guid);
+        }
+
+        private async Task NotifyBasket(Basket basket)
+        {
+            if (_notifierOptions.SubscribedRecipientsByBasketId.TryGetValue(basket.Item.ItemId.ToString(), out string[] recipients) && recipients.Length > 0)
+            {
+                _logger.LogInformation("{basketToNotify} will be notified to: {Recipients}", basket.DisplayName, recipients);
+                await _emailService.SendEmailAsync("New basket(s)", $"{basket.ItemsAvailable} basket(s) available at \"{basket.DisplayName}\"", recipients);
+            }
+            else
+            {
+                _logger.LogWarning("{basketToNotifyId} isn't filtered, email notifications won't be sent", basket.Item.ItemId);
+            }
         }
     }
 }

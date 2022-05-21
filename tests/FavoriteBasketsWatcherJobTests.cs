@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -24,7 +25,17 @@ namespace TooGoodToGoNotifier.Tests
             _loggerMock = new Mock<ILogger<FavoriteBasketsWatcherJob>>();
             _notifierOptions = Options.Create(new NotifierOptions
             {
-                Recipients = new string[] { "foo@bar" }
+                SubscribedRecipientsByBasketId = new Dictionary<string, string[]>
+                {
+                    {
+                        "1001",
+                        new string[] { "foo@foo.com", "foo+1@foo.com" }
+                    },
+                    {
+                        "1002",
+                        new string[] { "bar@bar.com" }
+                    }
+                }
             });
             _tooGoodToGoServiceMock = new Mock<ITooGoodToGoService>();
             _emailServiceMock = new Mock<IEmailService>();
@@ -37,48 +48,78 @@ namespace TooGoodToGoNotifier.Tests
                 _tooGoodToGoServiceMock.Object, _emailServiceMock.Object, _context);
         }
 
-        [Fact]
-        public async Task WhenBasketSeenAtleastOnceThenSeenAsOutOfStockThenSeenAgainShouldSendTwoEmails()
+        [Theory]
+        [InlineData(1001)]
+        [InlineData(1002)]
+        public async Task WhenNoBasketsSeenAsAvailableShouldntSendEmailsToAnyRecipients(int notifiedBasketId)
         {
-            SetupGetBasketsResponseMock(0);
-            await _favoriteBasketsWatcherJob.Invoke();
-            VerifyTotalEmailSentCount(Times.Never());
+            MockGetBasketsResponse(notifiedBasketId, 0);
 
-            SetupGetBasketsResponseMock(1);
             await _favoriteBasketsWatcherJob.Invoke();
-            await _favoriteBasketsWatcherJob.Invoke();
-            VerifyTotalEmailSentCount(Times.Once());
 
-            SetupGetBasketsResponseMock(0);
-            await _favoriteBasketsWatcherJob.Invoke();
-            VerifyTotalEmailSentCount(Times.Once());
-
-            SetupGetBasketsResponseMock(1);
-            await _favoriteBasketsWatcherJob.Invoke();
-            VerifyTotalEmailSentCount(Times.Exactly(2));
+            _emailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string[]>()), Times.Never);
         }
 
-        private void VerifyTotalEmailSentCount(Times times)
+        [Theory]
+        [InlineData(1001, new string[] { "foo@foo.com", "foo+1@foo.com" })]
+        [InlineData(1002, new string[] { "bar@bar.com" })]
+        public async Task WhenBasketSeenAsAvailableOnceShouldSendEmailToSubscribedRecipients(int notifiedBasketId, string[] expectedRecipients)
         {
-            _emailServiceMock.Verify(x => x.SendEmail(It.IsAny<string>(), It.IsAny<string>(), _notifierOptions.Value.Recipients), times);
+            MockGetBasketsResponse(notifiedBasketId, 1);
+
+            await _favoriteBasketsWatcherJob.Invoke();
+
+            _emailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.Is<string[]>(x => Enumerable.SequenceEqual(x, expectedRecipients))), Times.Once);
         }
 
-        private void SetupGetBasketsResponseMock(int availableItems)
+        [Theory]
+        [InlineData(1001, new string[] { "foo@foo.com", "foo+1@foo.com" })]
+        [InlineData(1002, new string[] { "bar@bar.com" })]
+        public async Task WhenBasketSeenAsAvailableTwiceShouldOnlySendEmailOnceToSubscribedRecipients(int notifiedBasketId, string[] expectedRecipients)
+        {
+            MockGetBasketsResponse(notifiedBasketId, 1);
+
+            await _favoriteBasketsWatcherJob.Invoke();
+            await _favoriteBasketsWatcherJob.Invoke();
+
+            _emailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.Is<string[]>(x => Enumerable.SequenceEqual(x, expectedRecipients))), Times.Once);
+        }
+
+        [Theory]
+        [InlineData(1001, new string[] { "foo@foo.com", "foo+1@foo.com" })]
+        [InlineData(1002, new string[] { "bar@bar.com" })]
+        public async Task WhenBasketSeenAsAvailableThenOutOfStockThenAvailableShouldSendEmailTwiceToSubscribedRecipients(int notifiedBasketId, string[] expectedRecipients)
+        {
+            MockGetBasketsResponse(notifiedBasketId, 1);
+
+            await _favoriteBasketsWatcherJob.Invoke();
+
+            MockGetBasketsResponse(notifiedBasketId, 0);
+
+            await _favoriteBasketsWatcherJob.Invoke();
+
+            MockGetBasketsResponse(notifiedBasketId, 1);
+
+            await _favoriteBasketsWatcherJob.Invoke();
+
+            _emailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.Is<string[]>(x => Enumerable.SequenceEqual(x, expectedRecipients))), Times.Exactly(2));
+        }
+
+        private void MockGetBasketsResponse(int notifiedBasketId, int availableItems)
         {
             var getBasketsResponse = new GetBasketsResponse
             {
                 Items = new List<Basket>
+                {
+                    new Basket
                     {
-                        new Basket
+                        ItemsAvailable = availableItems,
+                        Item = new Item
                         {
-                            DisplayName = "Basket",
-                            ItemsAvailable = availableItems,
-                            Item = new Item
-                            {
-                                ItemId = 1
-                            }
+                            ItemId = notifiedBasketId
                         }
                     }
+                }
             };
 
             _tooGoodToGoServiceMock.Setup(x => x.GetFavoriteBasketsAsync(_context.AccessToken, _context.UserId)).ReturnsAsync(getBasketsResponse);

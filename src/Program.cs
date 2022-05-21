@@ -76,7 +76,7 @@ namespace TooGoodToGoNotifier
                 .OrResult(httpResponseMessage => httpResponseMessage.StatusCode == HttpStatusCode.TooManyRequests)
                 .WaitAndRetryForeverAsync(retryAttempt => TimeSpan.FromSeconds(30 * retryAttempt), (_, retryAttempt, timespan) =>
                 {
-                    serviceProvider.GetService<ILogger<TooGoodToGoService>>().LogWarning("Transient Http, timeout or too many attempts error occured: delaying for {seconds} seconds, then making retry n°{retryAttemptNumber}", timespan.TotalSeconds, retryAttempt);
+                    serviceProvider.GetService<ILogger<TooGoodToGoService>>().LogInformation("Transient Http, timeout or too many attempts error occured: delaying for {seconds} seconds, then making retry n°{retryAttemptNumber}", timespan.TotalSeconds, retryAttempt);
                 });
         }
     }

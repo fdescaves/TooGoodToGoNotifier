@@ -1,4 +1,5 @@
-﻿using MailKit.Net.Smtp;
+﻿using System.Threading.Tasks;
+using MailKit.Net.Smtp;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
@@ -17,7 +18,7 @@ namespace TooGoodToGoNotifier
             _emailNotifierOptions = emailNotifierOptions.Value;
         }
 
-        public void SendEmail(string subject, string body, string[] recipients)
+        public async Task SendEmailAsync(string subject, string body, string[] recipients)
         {
             _logger.LogInformation("Sending email to {recipients}", string.Join(", ", recipients));
 
@@ -38,13 +39,13 @@ namespace TooGoodToGoNotifier
 
             using var client = new SmtpClient();
 
-            client.Connect(_emailNotifierOptions.SmtpServer, _emailNotifierOptions.SmtpPort, _emailNotifierOptions.UseSsl);
+            await client.ConnectAsync(_emailNotifierOptions.SmtpServer, _emailNotifierOptions.SmtpPort, _emailNotifierOptions.UseSsl);
 
-            client.Authenticate(_emailNotifierOptions.SmtpUserName, _emailNotifierOptions.SmtpPassword);
+            await client.AuthenticateAsync(_emailNotifierOptions.SmtpUserName, _emailNotifierOptions.SmtpPassword);
 
-            client.Send(message);
+            await client.SendAsync(message);
 
-            client.Disconnect(true);
+            await client.DisconnectAsync(true);
         }
     }
 }

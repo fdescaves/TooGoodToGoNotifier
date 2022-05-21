@@ -1,7 +1,9 @@
-﻿namespace TooGoodToGoNotifier
+﻿using System.Threading.Tasks;
+
+namespace TooGoodToGoNotifier
 {
     public interface IEmailService
     {
-        public void SendEmail(string subject, string body, string[] recipients);
+        public Task SendEmailAsync(string subject, string body, string[] recipients);
     }
 }

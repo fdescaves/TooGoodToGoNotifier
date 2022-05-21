@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace TooGoodToGoNotifier.Configuration
 {
@@ -12,6 +13,6 @@ namespace TooGoodToGoNotifier.Configuration
 
         public TimeSpan EndTime { get; set; }
 
-        public string[] Recipients { get; set; }
+        public Dictionary<string, string[]> SubscribedRecipientsByBasketId { get; set; }
     }
 }
