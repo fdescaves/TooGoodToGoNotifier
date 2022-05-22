@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace TooGoodToGoNotifier.Configuration
 {
@@ -15,6 +14,6 @@ namespace TooGoodToGoNotifier.Configuration
 
         public string[] DefaultRecipients { get; set; } = Array.Empty<string>();
 
-        public Dictionary<string, string[]> SubscribedRecipientsByBasketId { get; set; } = new Dictionary<string, string[]>();
+        public FilteredBaskets[] SubscribedBasketsIdByRecipients { get; set; } = Array.Empty<FilteredBaskets>();
     }
 }

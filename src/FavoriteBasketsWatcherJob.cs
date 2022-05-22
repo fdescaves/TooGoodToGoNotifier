@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Coravel.Invocable;
 using Microsoft.Extensions.Logging;
@@ -62,9 +63,15 @@ namespace TooGoodToGoNotifier
 
         private async Task NotifyBasket(Basket basket)
         {
-            string basketIdAsString = basket.Item.ItemId.ToString();
-            bool isFiltered = _notifierOptions.SubscribedRecipientsByBasketId.ContainsKey(basketIdAsString);
-            string[] recipients = isFiltered ? _notifierOptions.SubscribedRecipientsByBasketId[basketIdAsString] : _notifierOptions.DefaultRecipients;
+            string[] recipients = _notifierOptions.SubscribedBasketsIdByRecipients
+                .Where(x => x.BasketIds.Contains(basket.Item.ItemId))
+                .SelectMany(x => x.Recipients)
+                .ToArray();
+
+            if (recipients.Length == 0)
+            {
+                recipients = _notifierOptions.DefaultRecipients;
+            }
 
             if (recipients.Length > 0)
             {
@@ -73,7 +80,7 @@ namespace TooGoodToGoNotifier
             }
             else
             {
-                _logger.LogWarning("{basketToNotifyId} has no notification recipients", basket.Item.ItemId);
+                _logger.LogWarning("Default recipients aren't configured, {basketToNotifyId} - {basketDisplayName} won't be notified", basket.Item.ItemId, basket.DisplayName);
             }
         }
     }

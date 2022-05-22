@@ -27,19 +27,17 @@ namespace TooGoodToGoNotifier.Tests
             _notifierOptions = Options.Create(new NotifierOptions
             {
                 DefaultRecipients = new string[] { "default@recipient.com" },
-                SubscribedRecipientsByBasketId = new Dictionary<string, string[]>
+                SubscribedBasketsIdByRecipients = new FilteredBaskets[]
                 {
+                    new FilteredBaskets
                     {
-                        "1001",
-                        new string[] { "foo@foo.com", "foo+1@foo.com" }
+                        Recipients = new string[] { "foo@foo.com", "foo+1@foo.com" },
+                        BasketIds = new int[] { 1001, 1003 }
                     },
+                    new FilteredBaskets
                     {
-                        "1002",
-                        new string[] { "bar@bar.com" }
-                    },
-                    {
-                        "1003",
-                        Array.Empty<string>()
+                        Recipients = new string[] { "bar@bar.com" },
+                        BasketIds = new int[] { 1002, 1003 }
                     }
                 }
             });
@@ -69,6 +67,7 @@ namespace TooGoodToGoNotifier.Tests
         [Theory]
         [InlineData(1001, new string[] { "foo@foo.com", "foo+1@foo.com" })]
         [InlineData(1002, new string[] { "bar@bar.com" })]
+        [InlineData(1003, new string[] { "foo@foo.com", "foo+1@foo.com", "bar@bar.com" })]
         public async Task WhenBasketSeenAsAvailableOnceShouldSendEmailToSubscribedRecipients(int notifiedBasketId, string[] expectedRecipients)
         {
             MockGetBasketsResponse(notifiedBasketId, 1);
@@ -86,16 +85,6 @@ namespace TooGoodToGoNotifier.Tests
             await _favoriteBasketsWatcherJob.Invoke();
 
             _emailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.Is<string[]>(x => Enumerable.SequenceEqual(x, _notifierOptions.Value.DefaultRecipients))), Times.Once);
-        }
-
-        [Fact]
-        public async Task WhenBasketSeenAsAvailableOnceAndRecipientsArrayIsEmptyShouldntSendEmail()
-        {
-            MockGetBasketsResponse(1003, 1);
-
-            await _favoriteBasketsWatcherJob.Invoke();
-
-            _emailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string[]>()), Times.Never);
         }
 
         [Fact]
