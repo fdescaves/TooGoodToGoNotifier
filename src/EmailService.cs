@@ -27,7 +27,7 @@ namespace TooGoodToGoNotifier
 
             foreach (string recipient in recipients)
             {
-                message.To.Add(new MailboxAddress(string.Empty, recipient));
+                message.Bcc.Add(new MailboxAddress(string.Empty, recipient));
             }
 
             message.Subject = subject;
