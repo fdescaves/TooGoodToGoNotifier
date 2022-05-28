@@ -38,15 +38,11 @@ TooGoodToGoNotifier can also be used with multiple users using the `SubscribedBa
     "DefaultRecipients": ["defaultRecipientEmail"],
     "SubscribedBasketsIdByRecipients" : [
       {
-        "Recipients": [
-          "oneRecipientEmail",
-        ],
+        "Recipients": ["oneRecipientEmail"],
         "BasketIds": [210534]
       },
       {
-        "Recipients": [
-          "anotherRecipientEmail"
-        ],
+        "Recipients": ["anotherRecipientEmail"],
         "BasketIds": [210534, 215324]
       }
     ]
