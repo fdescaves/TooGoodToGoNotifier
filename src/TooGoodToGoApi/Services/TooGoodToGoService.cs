@@ -5,13 +5,13 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-using TooGoodToGoApi.Interfaces;
-using TooGoodToGoApi.Models;
-using TooGoodToGoApi.Models.Requests;
-using TooGoodToGoApi.Models.Responses;
+using TooGoodToGo.Api.Interfaces;
+using TooGoodToGo.Api.Models;
+using TooGoodToGo.Api.Models.Requests;
+using TooGoodToGo.Api.Models.Responses;
 using TooGoodToGoNotifier.Core;
 
-namespace TooGoodToGoApi.Services
+namespace TooGoodToGo.Api.Services
 {
     public class TooGoodToGoService : ITooGoodToGoService
     {
@@ -27,7 +27,7 @@ namespace TooGoodToGoApi.Services
             _httpClient = httpClient;
             _jsonSerializerSettings = new JsonSerializerSettings
             {
-                ContractResolver = new RequireObjectPropertiesContractResolver
+                ContractResolver = new DefaultContractResolver
                 {
                     NamingStrategy = new SnakeCaseNamingStrategy()
                 }
@@ -43,7 +43,7 @@ namespace TooGoodToGoApi.Services
             var getFavoriteBasketsRequest = new GetBasketsRequest
             {
                 UserId = userId,
-                Origin = new Origin
+                Origin = new Location
                 {
                     Latitude = 0,
                     Longitude = 0
@@ -57,7 +57,7 @@ namespace TooGoodToGoApi.Services
 
             SerializeHttpRequestContentAsJson(request, getFavoriteBasketsRequest);
 
-            var getBasketsResponse = await ExecuteAndThrowIfNotSuccessfulAsync<GetBasketsResponse>(request);
+            GetBasketsResponse getBasketsResponse = await ExecuteAndThrowIfNotSuccessfulAsync<GetBasketsResponse>(request);
 
             return getBasketsResponse;
         }
@@ -74,7 +74,7 @@ namespace TooGoodToGoApi.Services
 
             SerializeHttpRequestContentAsJson(request, authenticateByEmailRequest);
 
-            var authenticateByEmailResponse = await ExecuteAndThrowIfNotSuccessfulAsync<AuthenticateByEmailResponse>(request);
+            AuthenticateByEmailResponse authenticateByEmailResponse = await ExecuteAndThrowIfNotSuccessfulAsync<AuthenticateByEmailResponse>(request);
 
             return authenticateByEmailResponse;
         }
@@ -92,7 +92,7 @@ namespace TooGoodToGoApi.Services
 
             SerializeHttpRequestContentAsJson(request, authenticateByPollingIdRequest);
 
-            var authenticateByPollingIdResponse = await ExecuteAndThrowIfNotSuccessfulAsync<AuthenticateByPollingIdResponse>(request);
+            AuthenticateByPollingIdResponse authenticateByPollingIdResponse = await ExecuteAndThrowIfNotSuccessfulAsync<AuthenticateByPollingIdResponse>(request);
 
             return authenticateByPollingIdResponse;
         }
@@ -108,28 +108,50 @@ namespace TooGoodToGoApi.Services
 
             SerializeHttpRequestContentAsJson(request, refreshTokenRequest);
 
-            var refreshTokenResponse = await ExecuteAndThrowIfNotSuccessfulAsync<RefreshTokenResponse>(request);
+            RefreshTokenResponse refreshTokenResponse = await ExecuteAndThrowIfNotSuccessfulAsync<RefreshTokenResponse>(request);
 
             return refreshTokenResponse;
         }
 
+        public async Task SetFavoriteAsync(string accessToken, int basketId, bool isFavorite)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiOptions.BaseUrl}{_apiOptions.GetItemsEndpoint}{basketId}/setFavorite");
+            request.Headers.Add("Authorization", $"Bearer {accessToken}");
+
+            var setBasketFavoriteStatusRequest = new SetBasketFavoriteStatusRequest
+            {
+                IsFavorite = isFavorite
+            };
+
+            SerializeHttpRequestContentAsJson(request, setBasketFavoriteStatusRequest);
+
+            await ExecuteAndThrowIfNotSuccessfulAsync(request);
+        }
+
         private async Task<T> ExecuteAndThrowIfNotSuccessfulAsync<T>(HttpRequestMessage httpRequestMessage)
         {
-            var response = await _httpClient.SendAsync(httpRequestMessage);
+            string httpResponseContent = await ExecuteAndThrowIfNotSuccessfulAsync(httpRequestMessage);
 
-            var httpResponseContent = await response.Content.ReadAsStringAsync();
+            return JsonConvert.DeserializeObject<T>(httpResponseContent, _jsonSerializerSettings);
+        }
+
+        private async Task<string> ExecuteAndThrowIfNotSuccessfulAsync(HttpRequestMessage httpRequestMessage)
+        {
+            HttpResponseMessage response = await _httpClient.SendAsync(httpRequestMessage);
+
+            string httpResponseContent = await response.Content.ReadAsStringAsync();
 
             if (!response.IsSuccessStatusCode)
             {
                 throw new TooGoodToGoRequestException("Error while requesting TooGoodToGo's services", response.StatusCode, httpResponseContent);
             }
 
-            return JsonConvert.DeserializeObject<T>(httpResponseContent, _jsonSerializerSettings);
+            return httpResponseContent;
         }
 
         private void SerializeHttpRequestContentAsJson(HttpRequestMessage httpRequestMessage, object content)
         {
-            var serializedObject = JsonConvert.SerializeObject(content, _jsonSerializerSettings);
+            string serializedObject = JsonConvert.SerializeObject(content, _jsonSerializerSettings);
             httpRequestMessage.Content = new StringContent(serializedObject, Encoding.UTF8, "application/json");
         }
     }

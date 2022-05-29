@@ -1,4 +1,4 @@
-﻿namespace TooGoodToGoApi.Models.Requests
+﻿namespace TooGoodToGo.Api.Models.Requests
 {
     public class RefreshTokenRequest
     {

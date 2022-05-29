@@ -1,4 +1,4 @@
-﻿namespace TooGoodToGoApi.Models
+﻿namespace TooGoodToGo.Api.Models
 {
     public class User
     {

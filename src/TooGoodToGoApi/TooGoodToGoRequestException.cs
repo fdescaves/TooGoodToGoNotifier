@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 
-namespace TooGoodToGoApi
+namespace TooGoodToGo.Api
 {
     public class TooGoodToGoRequestException : Exception
     {

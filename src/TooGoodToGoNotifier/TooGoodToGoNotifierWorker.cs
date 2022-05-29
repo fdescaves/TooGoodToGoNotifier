@@ -5,8 +5,8 @@ using Coravel;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using TooGoodToGoApi.Interfaces;
-using TooGoodToGoApi.Models.Responses;
+using TooGoodToGo.Api.Interfaces;
+using TooGoodToGo.Api.Models.Responses;
 using TooGoodToGoNotifier.Core;
 using TooGoodToGoNotifier.Jobs;
 

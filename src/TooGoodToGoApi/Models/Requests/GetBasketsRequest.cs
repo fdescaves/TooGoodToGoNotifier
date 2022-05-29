@@ -1,10 +1,10 @@
-﻿namespace TooGoodToGoApi.Models.Requests
+﻿namespace TooGoodToGo.Api.Models.Requests
 {
     public class GetBasketsRequest
     {
         public int UserId { get; set; }
 
-        public Origin Origin { get; set; }
+        public Location Origin { get; set; }
 
         public int Radius { get; set; }
 

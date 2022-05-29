@@ -1,4 +1,4 @@
-﻿namespace TooGoodToGoApi.Models.Responses
+﻿namespace TooGoodToGo.Api.Models.Responses
 {
     public class AuthenticateByPollingIdResponse
     {

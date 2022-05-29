@@ -1,7 +1,7 @@
 ﻿using System.Threading.Tasks;
-using TooGoodToGoApi.Models.Responses;
+using TooGoodToGo.Api.Models.Responses;
 
-namespace TooGoodToGoApi.Interfaces
+namespace TooGoodToGo.Api.Interfaces
 {
     public interface ITooGoodToGoService
     {
@@ -12,5 +12,7 @@ namespace TooGoodToGoApi.Interfaces
         public Task<AuthenticateByPollingIdResponse> AuhenticateByPollingIdAsync(string pollingId);
 
         public Task<RefreshTokenResponse> RefreshAccessTokenAsync(string refreshToken);
+
+        public Task SetFavoriteAsync(string accessToken, int basketId, bool isFavorite);
     }
 }

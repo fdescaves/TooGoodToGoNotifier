@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 using Coravel.Invocable;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using TooGoodToGoApi.Interfaces;
-using TooGoodToGoApi.Models;
+using TooGoodToGo.Api.Interfaces;
+using TooGoodToGo.Api.Models;
 using TooGoodToGoNotifier.Core;
 using TooGoodToGoNotifier.Interfaces;
 
@@ -35,16 +35,16 @@ namespace TooGoodToGoNotifier.Jobs
         {
             _logger.LogInformation($"{nameof(FavoriteBasketsWatcherJob)} started - {{Guid}}", _guid);
 
-            var getBasketsResponse = await _tooGoodToGoService.GetFavoriteBasketsAsync(_context.AccessToken, _context.UserId);
+            TooGoodToGo.Api.Models.Responses.GetBasketsResponse getBasketsResponse = await _tooGoodToGoService.GetFavoriteBasketsAsync(_context.AccessToken, _context.UserId);
 
             var basketsToNotify = new List<Basket>();
-            foreach (var basket in getBasketsResponse.Items)
+            foreach (Basket basket in getBasketsResponse.Items)
             {
-                if (_context.NotifiedBaskets.TryGetValue(basket.Item.ItemId, out var isAlreadyNotified))
+                if (_context.NotifiedBaskets.TryGetValue(basket.Item.ItemId, out bool isAlreadyNotified))
                 {
                     if (basket.ItemsAvailable > 0 && !isAlreadyNotified)
                     {
-                        await NotifyBasket(basket);
+                        await NotifyBasketAsync(basket);
                         _context.NotifiedBaskets[basket.Item.ItemId] = true;
                     }
                     else if (basket.ItemsAvailable == 0 && isAlreadyNotified)
@@ -54,7 +54,7 @@ namespace TooGoodToGoNotifier.Jobs
                 }
                 else if (basket.ItemsAvailable > 0)
                 {
-                    await NotifyBasket(basket);
+                    await NotifyBasketAsync(basket);
                     _context.NotifiedBaskets.Add(basket.Item.ItemId, true);
                 }
             }
@@ -62,9 +62,9 @@ namespace TooGoodToGoNotifier.Jobs
             _logger.LogInformation($"{nameof(FavoriteBasketsWatcherJob)} ended - {{Guid}}", _guid);
         }
 
-        private async Task NotifyBasket(Basket basket)
+        private async Task NotifyBasketAsync(Basket basket)
         {
-            var recipients = _notifierOptions.SubscribedBasketsIdByRecipients
+            string[] recipients = _notifierOptions.SubscribedBasketsIdByRecipients
                 .Where(x => x.BasketIds.Contains(basket.Item.ItemId))
                 .SelectMany(x => x.Recipients)
                 .ToArray();

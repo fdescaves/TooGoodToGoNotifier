@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace TooGoodToGoApi.Models.Responses
+namespace TooGoodToGo.Api.Models.Responses
 {
     public class GetBasketsResponse
     {
