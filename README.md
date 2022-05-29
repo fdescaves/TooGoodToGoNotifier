@@ -12,7 +12,7 @@ TooGoodToGoNotifier is a .NET 6 console application that send email notification
 
 - Open the TooGoodToGo application and mark as favorite every basket that you wish to receive notifications
 
-- Open the [appsettings.json](src/appsettings.json) configuration file of TooGoodToGoNotifier
+- Open the [appsettings.json](src/TooGoodToGoNotifier/appsettings.json) configuration file of TooGoodToGoNotifier
 
 - Configure your TooGoodToGo account's email
 
