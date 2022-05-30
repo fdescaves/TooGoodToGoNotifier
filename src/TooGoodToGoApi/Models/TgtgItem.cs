@@ -1,28 +1,28 @@
 ﻿namespace TooGoodToGo.Api.Models
 {
-    public class Item
+    public class TgtgItem
     {
-        public int ItemId { get; set; }
+        public string ItemId { get; set; }
 
-        public SalesTaxes[] SalesTaxes { get; set; }
+        public TgtgSalesTaxes[] SalesTaxes { get; set; }
 
-        public TaxAmount TaxAmount { get; set; }
+        public TgtgTaxAmount TaxAmount { get; set; }
 
-        public TaxAmount PriceExcludingTaxes { get; set; }
+        public TgtgTaxAmount PriceExcludingTaxes { get; set; }
 
-        public TaxAmount PriceIncludingTaxes { get; set; }
+        public TgtgTaxAmount PriceIncludingTaxes { get; set; }
 
-        public TaxAmount ValueExcludingTaxes { get; set; }
+        public TgtgTaxAmount ValueExcludingTaxes { get; set; }
 
-        public TaxAmount ValueIncludingTaxes { get; set; }
+        public TgtgTaxAmount ValueIncludingTaxes { get; set; }
 
         public string TaxationPolicy { get; set; }
 
         public bool ShowSalesTaxes { get; set; }
 
-        public CoverPicture CoverPicture { get; set; }
+        public TgtgCoverPicture CoverPicture { get; set; }
 
-        public LogoPicture LogoPicture { get; set; }
+        public TgtgLogoPicture LogoPicture { get; set; }
 
         public string Name { get; set; }
 
@@ -40,11 +40,11 @@
 
         public string ItemCategory { get; set; }
 
-        public Badge[] Badges { get; set; }
+        public TgtgBadge[] Badges { get; set; }
 
         public string[] PositiveRatingReasons { get; set; }
 
-        public Rating AverageOverallRating { get; set; }
+        public TgtgRating AverageOverallRating { get; set; }
 
         public int FavoriteCount { get; set; }
 

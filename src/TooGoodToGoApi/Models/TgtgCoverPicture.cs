@@ -1,6 +1,6 @@
 ﻿namespace TooGoodToGo.Api.Models
 {
-    public class CoverPicture
+    public class TgtgCoverPicture
     {
         public string PictureId { get; set; }
 

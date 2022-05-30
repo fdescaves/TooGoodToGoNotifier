@@ -1,6 +1,6 @@
 ﻿namespace TooGoodToGo.Api.Models
 {
-    public class Store
+    public class TgtgStore
     {
         public string StoreId { get; set; }
 
@@ -14,9 +14,9 @@
 
         public string Website { get; set; }
 
-        public StoreLocation StoreLocation { get; set; }
+        public TgtgStoreLocation StoreLocation { get; set; }
 
-        public LogoPicture LogoPicture { get; set; }
+        public TgtgLogoPicture LogoPicture { get; set; }
 
         public string StoreTimeZone { get; set; }
 
@@ -28,7 +28,7 @@
 
         public float Distance { get; set; }
 
-        public CoverPicture CoverPicture { get; set; }
+        public TgtgCoverPicture CoverPicture { get; set; }
 
         public bool UsesEcommerceModel { get; set; }
     }

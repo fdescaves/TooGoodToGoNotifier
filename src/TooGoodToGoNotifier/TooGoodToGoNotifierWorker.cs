@@ -75,7 +75,7 @@ namespace TooGoodToGoNotifier
                 {
                     _context.AccessToken = authenticateByPollingIdResponse.AccessToken;
                     _context.RefreshToken = authenticateByPollingIdResponse.RefreshToken;
-                    _context.UserId = authenticateByPollingIdResponse.StartupData.User.UserId;
+                    _context.TooGoodToGoUserId = authenticateByPollingIdResponse.StartupData.User.UserId;
                     break;
                 }
 

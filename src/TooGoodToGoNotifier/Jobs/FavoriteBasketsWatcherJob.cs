@@ -35,10 +35,10 @@ namespace TooGoodToGoNotifier.Jobs
         {
             _logger.LogInformation($"{nameof(FavoriteBasketsWatcherJob)} started - {{Guid}}", _guid);
 
-            TooGoodToGo.Api.Models.Responses.GetBasketsResponse getBasketsResponse = await _tooGoodToGoService.GetFavoriteBasketsAsync(_context.AccessToken, _context.UserId);
+            TooGoodToGo.Api.Models.Responses.GetBasketsResponse getBasketsResponse = await _tooGoodToGoService.GetFavoriteBasketsAsync(_context.AccessToken, _context.TooGoodToGoUserId);
 
-            var basketsToNotify = new List<Basket>();
-            foreach (Basket basket in getBasketsResponse.Items)
+            var basketsToNotify = new List<TgtgBasket>();
+            foreach (TgtgBasket basket in getBasketsResponse.Items)
             {
                 if (_context.NotifiedBaskets.TryGetValue(basket.Item.ItemId, out bool isAlreadyNotified))
                 {
@@ -62,7 +62,7 @@ namespace TooGoodToGoNotifier.Jobs
             _logger.LogInformation($"{nameof(FavoriteBasketsWatcherJob)} ended - {{Guid}}", _guid);
         }
 
-        private async Task NotifyBasketAsync(Basket basket)
+        private async Task NotifyBasketAsync(TgtgBasket basket)
         {
             string[] recipients = _notifierOptions.SubscribedBasketsIdByRecipients
                 .Where(x => x.BasketIds.Contains(basket.Item.ItemId))

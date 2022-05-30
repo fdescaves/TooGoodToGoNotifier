@@ -8,8 +8,8 @@ namespace TooGoodToGoNotifier
 
         public string RefreshToken { get; set; }
 
-        public int UserId { get; set; }
+        public int TooGoodToGoUserId { get; set; }
 
-        public Dictionary<int, bool> NotifiedBaskets { get; } = new Dictionary<int, bool>();
+        public Dictionary<string, bool> NotifiedBaskets { get; } = new Dictionary<string, bool>();
     }
 }

@@ -43,7 +43,7 @@ namespace TooGoodToGo.Api.Services
             var getFavoriteBasketsRequest = new GetBasketsRequest
             {
                 UserId = userId,
-                Origin = new Location
+                Origin = new TgtgLocation
                 {
                     Latitude = 0,
                     Longitude = 0

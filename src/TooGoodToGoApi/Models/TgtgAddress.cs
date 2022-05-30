@@ -1,8 +1,8 @@
 ﻿namespace TooGoodToGo.Api.Models
 {
-    public class Address
+    public class TgtgAddress
     {
-        public Country Country { get; set; }
+        public TgtgCountry Country { get; set; }
 
         public string AddressLine { get; set; }
 

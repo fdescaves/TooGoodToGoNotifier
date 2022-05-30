@@ -1,5 +1,13 @@
 {
   "$schema": "https://json.schemastore.org/launchsettings.json",
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:62215/",
+      "sslPort": 44360
+    }
+  },
   "profiles": {
     "TooGoodToGoNotifier": {
       "commandName": "Project",

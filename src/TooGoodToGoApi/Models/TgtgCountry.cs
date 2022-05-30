@@ -1,6 +1,6 @@
 ﻿namespace TooGoodToGo.Api.Models
 {
-    public class Country
+    public class TgtgCountry
     {
         public string IsoCode { get; set; }
 

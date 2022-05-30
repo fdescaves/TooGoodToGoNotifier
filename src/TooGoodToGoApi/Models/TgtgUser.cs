@@ -1,6 +1,6 @@
 ﻿namespace TooGoodToGo.Api.Models
 {
-    public class User
+    public class TgtgUser
     {
         public int UserId { get; set; }
     }

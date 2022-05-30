@@ -2,17 +2,17 @@
 
 namespace TooGoodToGo.Api.Models
 {
-    public class Basket
+    public class TgtgBasket
     {
-        public Item Item { get; set; }
+        public TgtgItem Item { get; set; }
 
-        public Store Store { get; set; }
+        public TgtgStore Store { get; set; }
 
         public string DisplayName { get; set; }
 
-        public PickupInterval PickupInterval { get; set; }
+        public TgtgPickupInterval PickupInterval { get; set; }
 
-        public PickupLocation PickupLocation { get; set; }
+        public TgtgPickupLocation PickupLocation { get; set; }
 
         public DateTime PurchaseEnd { get; set; }
 

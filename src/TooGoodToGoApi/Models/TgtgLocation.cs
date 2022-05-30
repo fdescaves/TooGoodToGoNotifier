@@ -1,6 +1,6 @@
 ﻿namespace TooGoodToGo.Api.Models
 {
-    public class Location
+    public class TgtgLocation
     {
         public float Longitude { get; set; }
 

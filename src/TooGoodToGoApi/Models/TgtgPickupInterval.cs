@@ -2,7 +2,7 @@
 
 namespace TooGoodToGo.Api.Models
 {
-    public class PickupInterval
+    public class TgtgPickupInterval
     {
         public DateTime Start { get; set; }
 

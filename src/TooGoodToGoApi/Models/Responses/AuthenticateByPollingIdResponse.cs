@@ -6,6 +6,6 @@
 
         public string RefreshToken { get; set; }
 
-        public StartupData StartupData { get; set; }
+        public TgtgStartupData StartupData { get; set; }
     }
 }

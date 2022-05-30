@@ -1,6 +1,6 @@
 ﻿namespace TooGoodToGo.Api.Models
 {
-    public class TaxAmount
+    public class TgtgTaxAmount
     {
         public string Code { get; set; }
 

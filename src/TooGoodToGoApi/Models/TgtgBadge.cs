@@ -1,6 +1,6 @@
 ﻿namespace TooGoodToGo.Api.Models
 {
-    public class Badge
+    public class TgtgBadge
     {
         public string BadgeType { get; set; }
 

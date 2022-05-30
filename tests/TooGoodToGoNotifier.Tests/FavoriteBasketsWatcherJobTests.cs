@@ -35,12 +35,12 @@ namespace TooGoodToGoNotifier.Tests
                     new FilteredBaskets
                     {
                         Recipients = new string[] { "foo@foo.com", "foo+1@foo.com" },
-                        BasketIds = new int[] { 1001, 1003 }
+                        BasketIds = new string[] { "1001", "1003" }
                     },
                     new FilteredBaskets
                     {
                         Recipients = new string[] { "bar@bar.com" },
-                        BasketIds = new int[] { 1002, 1003 }
+                        BasketIds = new string[] { "1002", "1003" }
                     }
                 }
             });
@@ -49,16 +49,16 @@ namespace TooGoodToGoNotifier.Tests
             _context = new Context
             {
                 AccessToken = "accessToken",
-                UserId = 1
+                TooGoodToGoUserId = 1
             };
             _favoriteBasketsWatcherJob = new FavoriteBasketsWatcherJob(_loggerMock.Object, _notifierOptions,
                 _tooGoodToGoServiceMock.Object, _emailServiceMock.Object, _context);
         }
 
         [Theory]
-        [InlineData(1001)]
-        [InlineData(1002)]
-        public async Task WhenNoBasketsSeenAsAvailableShouldntSendEmailsToAnyRecipients(int notifiedBasketId)
+        [InlineData("1001")]
+        [InlineData("1002")]
+        public async Task WhenNoBasketsSeenAsAvailableShouldntSendEmailsToAnyRecipients(string notifiedBasketId)
         {
             MockGetBasketsResponse(notifiedBasketId, 0);
 
@@ -68,10 +68,10 @@ namespace TooGoodToGoNotifier.Tests
         }
 
         [Theory]
-        [InlineData(1001, new string[] { "foo@foo.com", "foo+1@foo.com" })]
-        [InlineData(1002, new string[] { "bar@bar.com" })]
-        [InlineData(1003, new string[] { "foo@foo.com", "foo+1@foo.com", "bar@bar.com" })]
-        public async Task WhenBasketSeenAsAvailableOnceShouldSendEmailToSubscribedRecipients(int notifiedBasketId, string[] expectedRecipients)
+        [InlineData("1001", new string[] { "foo@foo.com", "foo+1@foo.com" })]
+        [InlineData("1002", new string[] { "bar@bar.com" })]
+        [InlineData("1003", new string[] { "foo@foo.com", "foo+1@foo.com", "bar@bar.com" })]
+        public async Task WhenBasketSeenAsAvailableOnceShouldSendEmailToSubscribedRecipients(string notifiedBasketId, string[] expectedRecipients)
         {
             MockGetBasketsResponse(notifiedBasketId, 1);
 
@@ -83,7 +83,7 @@ namespace TooGoodToGoNotifier.Tests
         [Fact]
         public async Task WhenBasketSeenAsAvailableOnceAndIsntFilteredShouldSendEmailToDefaultRecipients()
         {
-            MockGetBasketsResponse(1000, 1);
+            MockGetBasketsResponse("1000", 1);
 
             await _favoriteBasketsWatcherJob.Invoke();
 
@@ -94,7 +94,7 @@ namespace TooGoodToGoNotifier.Tests
         public async Task WhenBasketSeenAsAvailableOnceAndIsntFilteredAndDefaultRecipientsArrayIsEmptyShouldntSendEmail()
         {
             _notifierOptions.Value.DefaultRecipients = Array.Empty<string>();
-            MockGetBasketsResponse(1000, 1);
+            MockGetBasketsResponse("1000", 1);
 
             await _favoriteBasketsWatcherJob.Invoke();
 
@@ -102,9 +102,9 @@ namespace TooGoodToGoNotifier.Tests
         }
 
         [Theory]
-        [InlineData(1001, new string[] { "foo@foo.com", "foo+1@foo.com" })]
-        [InlineData(1002, new string[] { "bar@bar.com" })]
-        public async Task WhenBasketSeenAsAvailableTwiceShouldOnlySendEmailOnceToSubscribedRecipients(int notifiedBasketId, string[] expectedRecipients)
+        [InlineData("1001", new string[] { "foo@foo.com", "foo+1@foo.com" })]
+        [InlineData("1002", new string[] { "bar@bar.com" })]
+        public async Task WhenBasketSeenAsAvailableTwiceShouldOnlySendEmailOnceToSubscribedRecipients(string notifiedBasketId, string[] expectedRecipients)
         {
             MockGetBasketsResponse(notifiedBasketId, 1);
 
@@ -115,9 +115,9 @@ namespace TooGoodToGoNotifier.Tests
         }
 
         [Theory]
-        [InlineData(1001, new string[] { "foo@foo.com", "foo+1@foo.com" })]
-        [InlineData(1002, new string[] { "bar@bar.com" })]
-        public async Task WhenBasketSeenAsAvailableThenOutOfStockThenAvailableShouldSendEmailTwiceToSubscribedRecipients(int notifiedBasketId, string[] expectedRecipients)
+        [InlineData("1001", new string[] { "foo@foo.com", "foo+1@foo.com" })]
+        [InlineData("1002", new string[] { "bar@bar.com" })]
+        public async Task WhenBasketSeenAsAvailableThenOutOfStockThenAvailableShouldSendEmailTwiceToSubscribedRecipients(string notifiedBasketId, string[] expectedRecipients)
         {
             MockGetBasketsResponse(notifiedBasketId, 1);
 
@@ -134,16 +134,16 @@ namespace TooGoodToGoNotifier.Tests
             _emailServiceMock.Verify(x => x.SendEmailAsync(It.IsAny<string>(), It.IsAny<string>(), It.Is<string[]>(x => Enumerable.SequenceEqual(x, expectedRecipients))), Times.Exactly(2));
         }
 
-        private void MockGetBasketsResponse(int notifiedBasketId, int availableItems)
+        private void MockGetBasketsResponse(string notifiedBasketId, int availableItems)
         {
             var getBasketsResponse = new GetBasketsResponse
             {
-                Items = new List<Basket>
+                Items = new List<TgtgBasket>
                 {
-                    new Basket
+                    new TgtgBasket
                     {
                         ItemsAvailable = availableItems,
-                        Item = new Item
+                        Item = new TgtgItem
                         {
                             ItemId = notifiedBasketId
                         }
@@ -151,7 +151,7 @@ namespace TooGoodToGoNotifier.Tests
                 }
             };
 
-            _tooGoodToGoServiceMock.Setup(x => x.GetFavoriteBasketsAsync(_context.AccessToken, _context.UserId)).ReturnsAsync(getBasketsResponse);
+            _tooGoodToGoServiceMock.Setup(x => x.GetFavoriteBasketsAsync(_context.AccessToken, _context.TooGoodToGoUserId)).ReturnsAsync(getBasketsResponse);
         }
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace TooGoodToGo.Api.Models
 {
-    public class Rating
+    public class TgtgRating
     {
         public float AverageOverallRating { get; set; }
 

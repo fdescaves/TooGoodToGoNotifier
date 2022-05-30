@@ -4,7 +4,7 @@
     {
         public int UserId { get; set; }
 
-        public Location Origin { get; set; }
+        public TgtgLocation Origin { get; set; }
 
         public int Radius { get; set; }
 
