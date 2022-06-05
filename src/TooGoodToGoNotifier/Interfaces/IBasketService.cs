@@ -1,13 +1,13 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using TooGoodToGo.Api.Models;
+using TooGoodToGoNotifier.Dto;
 
 namespace TooGoodToGoNotifier.Interfaces
 {
     public interface IBasketService
     {
-        Task<IEnumerable<TgtgBasket>> GetFavoriteBasketsAsync();
+        Task<IEnumerable<BasketDto>> GetFavoriteBasketsAsync();
 
-        Task SetBasketAsFavoriteAsync(int id, bool isFavorite);
+        Task SetBasketAsFavoriteAsync(string id, bool isFavorite);
     }
 }

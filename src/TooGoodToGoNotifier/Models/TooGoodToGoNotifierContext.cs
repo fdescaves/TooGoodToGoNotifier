@@ -1,4 +1,8 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace TooGoodToGoNotifier.Models
 {
@@ -9,6 +13,8 @@ namespace TooGoodToGoNotifier.Models
         {
         }
 
+        public DbSet<User> Users { get; set; }
+
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
             optionsBuilder.UseSqlite("Data Source=TooGoodToGoNotifier.db;Cache=Shared");
@@ -16,12 +22,16 @@ namespace TooGoodToGoNotifier.Models
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<User>()
+                .Property(x => x.FavoriteBaskets)
+                .HasConversion(
+                    x => string.Join(',', x),
+                    x => x.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList(),
+                    new ValueComparer<List<string>>(
+                        (c1, c2) => c1.SequenceEqual(c2),
+                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
+                        c => c.ToList())
+                );
         }
-
-        public DbSet<User> Users { get; set; }
-
-        public DbSet<Basket> Baskets { get; set; }
-
-        public DbSet<Store> Stores { get; set; }
     }
 }

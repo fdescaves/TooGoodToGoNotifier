@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using TooGoodToGo.Api.Models;
+using TooGoodToGoNotifier.Dto;
 using TooGoodToGoNotifier.Interfaces;
 
 namespace TooGoodToGoNotifier.Controllers
@@ -29,9 +29,9 @@ namespace TooGoodToGoNotifier.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Produces("application/json")]
-        public async Task<ActionResult<IEnumerable<TgtgBasket>>> GetFavoriteBasketsAsync()
+        public async Task<ActionResult<IEnumerable<BasketDto>>> GetFavoriteBasketsAsync()
         {
-            IEnumerable<TgtgBasket> favoriteBaskets = await _basketService.GetFavoriteBasketsAsync();
+            IEnumerable<BasketDto> favoriteBaskets = await _basketService.GetFavoriteBasketsAsync();
             return Ok(favoriteBaskets);
         }
 
@@ -45,7 +45,7 @@ namespace TooGoodToGoNotifier.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Produces("application/json")]
-        public async Task<ActionResult> SetBasketAsFavoriteAsync(int id, bool isFavorite)
+        public async Task<ActionResult> SetBasketAsFavoriteAsync(string id, bool isFavorite)
         {
             await _basketService.SetBasketAsFavoriteAsync(id, isFavorite);
             return Ok();

@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Moq;
@@ -22,6 +24,7 @@ namespace TooGoodToGoNotifier.Tests
         private readonly Mock<ITooGoodToGoService> _tooGoodToGoServiceMock;
         private readonly Mock<IEmailService> _emailServiceMock;
         private readonly Context _context;
+        private readonly IMemoryCache _memoryCache;
         private readonly FavoriteBasketsWatcherJob _favoriteBasketsWatcherJob;
 
         public FavoriteBasketsWatcherJobTests()
@@ -51,8 +54,16 @@ namespace TooGoodToGoNotifier.Tests
                 AccessToken = "accessToken",
                 TooGoodToGoUserId = 1
             };
+
+
+            // Using a real instance of IMemoryCache is easier than mocking it
+            var services = new ServiceCollection();
+            services.AddMemoryCache();
+            var serviceProvider = services.BuildServiceProvider();
+            _memoryCache = serviceProvider.GetService<IMemoryCache>();
+
             _favoriteBasketsWatcherJob = new FavoriteBasketsWatcherJob(_loggerMock.Object, _notifierOptions,
-                _tooGoodToGoServiceMock.Object, _emailServiceMock.Object, _context);
+                _tooGoodToGoServiceMock.Object, _emailServiceMock.Object, _context, _memoryCache);
         }
 
         [Theory]

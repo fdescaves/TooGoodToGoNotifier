@@ -1,11 +1,10 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using Coravel;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -77,6 +76,7 @@ namespace TooGoodToGoNotifier
             })
             .AddDbContext<TooGoodToGoNotifierContext>()
             .AddScheduler()
+            .AddMemoryCache()
             .Configure<NotifierOptions>(configuration.GetSection(nameof(NotifierOptions)))
             .Configure<TooGoodToGoApiOptions>(configuration.GetSection(nameof(TooGoodToGoApiOptions)))
             .Configure<EmailServiceOptions>(configuration.GetSection(nameof(EmailServiceOptions)))

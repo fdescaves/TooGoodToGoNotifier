@@ -9,7 +9,7 @@ namespace TooGoodToGoNotifier.Models
 
         public string Email { get; set; }
 
-        public List<Basket> FavoriteBaskets { get; set; }
+        public List<string> FavoriteBaskets { get; set; }
 
         public DateTime CreatedDate { get; set; }
     }

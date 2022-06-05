@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Coravel.Invocable;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using TooGoodToGo.Api.Interfaces;
 using TooGoodToGo.Api.Models;
+using TooGoodToGo.Api.Models.Responses;
 using TooGoodToGoNotifier.Core;
 using TooGoodToGoNotifier.Interfaces;
 
@@ -19,15 +21,17 @@ namespace TooGoodToGoNotifier.Jobs
         private readonly ITooGoodToGoService _tooGoodToGoService;
         private readonly IEmailService _emailService;
         private readonly Context _context;
+        private readonly IMemoryCache _memoryCache;
         private readonly Guid _guid;
 
-        public FavoriteBasketsWatcherJob(ILogger<FavoriteBasketsWatcherJob> logger, IOptions<NotifierOptions> notifierOptions, ITooGoodToGoService tooGoodToGoService, IEmailService emailService, Context context)
+        public FavoriteBasketsWatcherJob(ILogger<FavoriteBasketsWatcherJob> logger, IOptions<NotifierOptions> notifierOptions, ITooGoodToGoService tooGoodToGoService, IEmailService emailService, Context context, IMemoryCache memoryCache)
         {
             _logger = logger;
             _notifierOptions = notifierOptions.Value;
             _tooGoodToGoService = tooGoodToGoService;
             _emailService = emailService;
             _context = context;
+            _memoryCache = memoryCache;
             _guid = Guid.NewGuid();
         }
 
@@ -35,7 +39,9 @@ namespace TooGoodToGoNotifier.Jobs
         {
             _logger.LogInformation($"{nameof(FavoriteBasketsWatcherJob)} started - {{Guid}}", _guid);
 
-            TooGoodToGo.Api.Models.Responses.GetBasketsResponse getBasketsResponse = await _tooGoodToGoService.GetFavoriteBasketsAsync(_context.AccessToken, _context.TooGoodToGoUserId);
+            GetBasketsResponse getBasketsResponse = await _tooGoodToGoService.GetFavoriteBasketsAsync(_context.AccessToken, _context.TooGoodToGoUserId);
+
+            _memoryCache.Set(Constants.BASKETS_CACHE_KEY, getBasketsResponse.Items);
 
             var basketsToNotify = new List<TgtgBasket>();
             foreach (TgtgBasket basket in getBasketsResponse.Items)
