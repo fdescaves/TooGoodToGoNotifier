@@ -1,4 +1,4 @@
-﻿namespace TooGoodToGoNotifier.Core
+﻿namespace TooGoodToGoNotifier.Core.Options
 {
     public class TooGoodToGoApiOptions
     {

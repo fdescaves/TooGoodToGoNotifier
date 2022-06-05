@@ -9,7 +9,7 @@ using TooGoodToGo.Api.Interfaces;
 using TooGoodToGo.Api.Models;
 using TooGoodToGo.Api.Models.Requests;
 using TooGoodToGo.Api.Models.Responses;
-using TooGoodToGoNotifier.Core;
+using TooGoodToGoNotifier.Core.Options;
 
 namespace TooGoodToGo.Api.Services
 {

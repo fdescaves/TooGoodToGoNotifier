@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TooGoodToGoNotifier.Core
+namespace TooGoodToGoNotifier.Core.Options
 {
     public class NotifierOptions
     {
@@ -13,9 +13,5 @@ namespace TooGoodToGoNotifier.Core
         public TimeSpan StartTime { get; set; }
 
         public TimeSpan EndTime { get; set; }
-
-        public string[] DefaultRecipients { get; set; } = Array.Empty<string>();
-
-        public FilteredBaskets[] SubscribedBasketsIdByRecipients { get; set; } = Array.Empty<FilteredBaskets>();
     }
 }

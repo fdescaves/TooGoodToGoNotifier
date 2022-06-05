@@ -10,26 +10,30 @@ using TooGoodToGo.Api.Interfaces;
 using TooGoodToGo.Api.Models;
 using TooGoodToGo.Api.Models.Responses;
 using TooGoodToGoNotifier.Core;
+using TooGoodToGoNotifier.Core.Options;
 using TooGoodToGoNotifier.Interfaces;
+using TooGoodToGoNotifier.Models;
 
 namespace TooGoodToGoNotifier.Jobs
 {
     public class FavoriteBasketsWatcherJob : IInvocable
     {
         private readonly ILogger _logger;
-        private readonly NotifierOptions _notifierOptions;
         private readonly ITooGoodToGoService _tooGoodToGoService;
         private readonly IEmailService _emailService;
+        private readonly IUserService _userService;
         private readonly Context _context;
         private readonly IMemoryCache _memoryCache;
         private readonly Guid _guid;
+        private List<User> _users;
 
-        public FavoriteBasketsWatcherJob(ILogger<FavoriteBasketsWatcherJob> logger, IOptions<NotifierOptions> notifierOptions, ITooGoodToGoService tooGoodToGoService, IEmailService emailService, Context context, IMemoryCache memoryCache)
+        public FavoriteBasketsWatcherJob(ILogger<FavoriteBasketsWatcherJob> logger, ITooGoodToGoService tooGoodToGoService, IEmailService emailService, 
+            IUserService userService, Context context, IMemoryCache memoryCache)
         {
             _logger = logger;
-            _notifierOptions = notifierOptions.Value;
             _tooGoodToGoService = tooGoodToGoService;
             _emailService = emailService;
+            _userService = userService;
             _context = context;
             _memoryCache = memoryCache;
             _guid = Guid.NewGuid();
@@ -39,8 +43,8 @@ namespace TooGoodToGoNotifier.Jobs
         {
             _logger.LogInformation($"{nameof(FavoriteBasketsWatcherJob)} started - {{Guid}}", _guid);
 
+            _users = await _userService.GetAllUsersAsync();
             GetBasketsResponse getBasketsResponse = await _tooGoodToGoService.GetFavoriteBasketsAsync(_context.AccessToken, _context.TooGoodToGoUserId);
-
             _memoryCache.Set(Constants.BASKETS_CACHE_KEY, getBasketsResponse.Items);
 
             var basketsToNotify = new List<TgtgBasket>();
@@ -70,15 +74,10 @@ namespace TooGoodToGoNotifier.Jobs
 
         private async Task NotifyBasketAsync(TgtgBasket basket)
         {
-            string[] recipients = _notifierOptions.SubscribedBasketsIdByRecipients
-                .Where(x => x.BasketIds.Contains(basket.Item.ItemId))
-                .SelectMany(x => x.Recipients)
+            string[] recipients = _users
+                .Where(x => x.FavoriteBaskets.Contains(basket.Item.ItemId))
+                .Select(x => x.Email)
                 .ToArray();
-
-            if (recipients.Length == 0)
-            {
-                recipients = _notifierOptions.DefaultRecipients;
-            }
 
             if (recipients.Length > 0)
             {

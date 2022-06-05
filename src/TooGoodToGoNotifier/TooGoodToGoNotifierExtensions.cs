@@ -7,7 +7,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using TooGoodToGo.Api.Interfaces;
 using TooGoodToGo.Api.Models.Responses;
-using TooGoodToGoNotifier.Core;
+using TooGoodToGoNotifier.Core.Options;
 using TooGoodToGoNotifier.Jobs;
 
 namespace TooGoodToGoNotifier

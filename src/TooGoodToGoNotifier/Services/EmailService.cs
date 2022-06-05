@@ -3,7 +3,7 @@ using MailKit.Net.Smtp;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
-using TooGoodToGoNotifier.Core;
+using TooGoodToGoNotifier.Core.Options;
 using TooGoodToGoNotifier.Interfaces;
 
 namespace TooGoodToGoNotifier.Services

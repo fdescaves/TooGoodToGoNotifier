@@ -18,7 +18,7 @@ using Polly.Extensions.Http;
 using Polly.Timeout;
 using TooGoodToGo.Api.Interfaces;
 using TooGoodToGo.Api.Services;
-using TooGoodToGoNotifier.Core;
+using TooGoodToGoNotifier.Core.Options;
 using TooGoodToGoNotifier.Interfaces;
 using TooGoodToGoNotifier.Jobs;
 using TooGoodToGoNotifier.Models;
@@ -86,6 +86,7 @@ namespace TooGoodToGoNotifier
             .AddTransient<ITooGoodToGoService, TooGoodToGoService>()
             .AddTransient<IEmailService, EmailService>()
             .AddTransient<IBasketService, BasketService>()
+            .AddTransient<IUserService, UserService>()
             .AddTransient<FavoriteBasketsWatcherJob>()
             .AddTransient<RefreshAccessTokenJob>()
             .AddTransient<SynchronizeFavoriteBasketsJob>()

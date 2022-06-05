@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace TooGoodToGoNotifier.Core
+namespace TooGoodToGoNotifier.Core.Options
 {
     public class FilteredBaskets
     {
