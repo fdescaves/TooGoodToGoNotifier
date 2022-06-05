@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Coravel.Invocable;
 using Microsoft.Extensions.Logging;
 using TooGoodToGo.Api.Interfaces;
+using TooGoodToGo.Api.Models.Responses;
 
 namespace TooGoodToGoNotifier.Jobs
 {
@@ -25,7 +26,7 @@ namespace TooGoodToGoNotifier.Jobs
         {
             _logger.LogInformation($"{nameof(RefreshAccessTokenJob)} started - {{Guid}}", _guid);
 
-            TooGoodToGo.Api.Models.Responses.RefreshTokenResponse refreshTokenResponse = await _tooGoodToGoService.RefreshAccessTokenAsync(_context.RefreshToken);
+            RefreshTokenResponse refreshTokenResponse = await _tooGoodToGoService.RefreshAccessTokenAsync(_context.RefreshToken);
             _context.AccessToken = refreshTokenResponse.AccessToken;
             _context.RefreshToken = refreshTokenResponse.RefreshToken;
 

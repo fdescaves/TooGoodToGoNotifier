@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Reflection;
+using System.Threading.Tasks;
 using Coravel;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
@@ -43,6 +44,8 @@ namespace TooGoodToGoNotifier
 
             app.UseAuthorization();
             app.MapControllers();
+            app.AuthenticateToTooGoodToGoServices();
+            app.ScheduleBackgroundJobs();
             app.Run();
         }
 
@@ -85,9 +88,9 @@ namespace TooGoodToGoNotifier
             .AddTransient<IBasketService, BasketService>()
             .AddTransient<FavoriteBasketsWatcherJob>()
             .AddTransient<RefreshAccessTokenJob>()
+            .AddTransient<SynchronizeFavoriteBasketsJob>()
             .AddSingleton<Context>()
-            .AddSingleton(cookieContainer)
-            .AddHostedService<TooGoodToGoNotifierWorker>();
+            .AddSingleton(cookieContainer);
 
             services.AddHttpClient<ITooGoodToGoService, TooGoodToGoService>(httpClient =>
             {

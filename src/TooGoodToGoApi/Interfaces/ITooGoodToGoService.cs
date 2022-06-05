@@ -13,6 +13,6 @@ namespace TooGoodToGo.Api.Interfaces
 
         public Task<RefreshTokenResponse> RefreshAccessTokenAsync(string refreshToken);
 
-        public Task SetFavoriteAsync(string accessToken, int basketId, bool isFavorite);
+        public Task SetFavoriteAsync(string accessToken, string basketId, bool isFavorite);
     }
 }

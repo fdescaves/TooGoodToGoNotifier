@@ -8,6 +8,8 @@ namespace TooGoodToGoNotifier.Core
 
         public string RefreshAccessTokenCronExpression { get; set; }
 
+        public string SynchronizeFavoriteBasketsCronExpression { get; set; }
+
         public TimeSpan StartTime { get; set; }
 
         public TimeSpan EndTime { get; set; }

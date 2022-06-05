@@ -113,7 +113,7 @@ namespace TooGoodToGo.Api.Services
             return refreshTokenResponse;
         }
 
-        public async Task SetFavoriteAsync(string accessToken, int basketId, bool isFavorite)
+        public async Task SetFavoriteAsync(string accessToken, string basketId, bool isFavorite)
         {
             var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiOptions.BaseUrl}{_apiOptions.GetItemsEndpoint}{basketId}/setFavorite");
             request.Headers.Add("Authorization", $"Bearer {accessToken}");
