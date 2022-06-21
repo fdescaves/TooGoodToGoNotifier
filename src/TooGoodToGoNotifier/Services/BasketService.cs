@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
@@ -25,9 +26,14 @@ namespace TooGoodToGoNotifier.Services
             _memoryCache = memoryCache;
         }
 
-        public async Task<IEnumerable<BasketDto>> GetFavoriteBasketsAsync()
+        public async Task<IEnumerable<BasketDto>> GetFavoriteBasketsAsync(string userEmail)
         {
-            User user = await _dbContext.Users.FirstOrDefaultAsync();
+            User user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email == userEmail);
+
+            if (user == null)
+            {
+                throw new Exception("Unknown user");
+            }
 
             if (_memoryCache.TryGetValue(Constants.BASKETS_CACHE_KEY, out List<TgtgBasket> baskets))
             {
@@ -47,9 +53,14 @@ namespace TooGoodToGoNotifier.Services
             return new List<BasketDto>();
         }
 
-        public async Task SetBasketAsFavoriteAsync(string id, bool isFavorite)
+        public async Task SetBasketAsFavoriteAsync(string userEmail, string id, bool isFavorite)
         {
-            User user = await _dbContext.Users.FirstOrDefaultAsync();
+            User user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email == userEmail);
+
+            if (user == null)
+            {
+                throw new Exception("Unknown user");
+            }
 
             if (isFavorite && !user.FavoriteBaskets.Contains(id))
             {
