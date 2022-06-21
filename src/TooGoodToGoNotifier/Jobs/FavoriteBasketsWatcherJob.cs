@@ -5,12 +5,10 @@ using System.Threading.Tasks;
 using Coravel.Invocable;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using TooGoodToGo.Api.Interfaces;
 using TooGoodToGo.Api.Models;
 using TooGoodToGo.Api.Models.Responses;
 using TooGoodToGoNotifier.Core;
-using TooGoodToGoNotifier.Core.Options;
 using TooGoodToGoNotifier.Interfaces;
 using TooGoodToGoNotifier.Models;
 
@@ -27,7 +25,7 @@ namespace TooGoodToGoNotifier.Jobs
         private readonly Guid _guid;
         private List<User> _users;
 
-        public FavoriteBasketsWatcherJob(ILogger<FavoriteBasketsWatcherJob> logger, ITooGoodToGoService tooGoodToGoService, IEmailService emailService, 
+        public FavoriteBasketsWatcherJob(ILogger<FavoriteBasketsWatcherJob> logger, ITooGoodToGoService tooGoodToGoService, IEmailService emailService,
             IUserService userService, Context context, IMemoryCache memoryCache)
         {
             _logger = logger;
@@ -82,7 +80,9 @@ namespace TooGoodToGoNotifier.Jobs
             if (recipients.Length > 0)
             {
                 _logger.LogInformation("{basketToNotify} will be notified to: {Recipients}", basket.DisplayName, recipients);
+#if !DEBUG
                 await _emailService.SendEmailAsync("New basket(s)", $"{basket.ItemsAvailable} basket(s) available at \"{basket.DisplayName}\"", recipients);
+#endif
             }
             else
             {

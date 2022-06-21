@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -45,7 +45,7 @@ namespace TooGoodToGoNotifier
             app.UseAuthorization();
             app.MapControllers();
             app.AuthenticateToTooGoodToGoServices();
-            app.ScheduleBackgroundJobs();
+            app.ScheduleBackgroundJobs(); // Coravel jobs must be scheduled at startup, otherwise RunOnceAtStart() method won't work
             app.Run();
         }
 

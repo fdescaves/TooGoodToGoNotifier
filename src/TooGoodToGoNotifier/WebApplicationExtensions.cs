@@ -12,7 +12,7 @@ using TooGoodToGoNotifier.Jobs;
 
 namespace TooGoodToGoNotifier
 {
-    public static class TooGoodToGoNotifierExtensions
+    public static class WebApplicationExtensions
     {
         public static void ScheduleBackgroundJobs(this WebApplication app)
         {
