@@ -17,7 +17,6 @@ namespace TooGoodToGoNotifier.Models
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
-            optionsBuilder.UseSqlite("Data Source=TooGoodToGoNotifier.db;Cache=Shared");
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)

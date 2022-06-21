@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -6,6 +6,7 @@ using System.Reflection;
 using System.Threading.Tasks;
 using Coravel;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
@@ -77,7 +78,10 @@ namespace TooGoodToGoNotifier
                 string xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
             })
-            .AddDbContext<TooGoodToGoNotifierContext>()
+            .AddDbContext<TooGoodToGoNotifierContext>(options =>
+            {
+                options.UseSqlite(configuration.GetConnectionString("TooGoodToGoNotifier"));
+            })
             .AddScheduler()
             .AddMemoryCache()
             .Configure<NotifierOptions>(configuration.GetSection(nameof(NotifierOptions)))
