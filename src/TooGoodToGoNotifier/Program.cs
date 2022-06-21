@@ -29,7 +29,7 @@ namespace TooGoodToGoNotifier
 {
     public class Program
     {
-        private static void Main(string[] args)
+        private static async Task Main(string[] args)
         {
             WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
@@ -45,7 +45,7 @@ namespace TooGoodToGoNotifier
 
             app.UseAuthorization();
             app.MapControllers();
-            app.AuthenticateToTooGoodToGoServices();
+            await app.AuthenticateToTooGoodToGoServices();
             app.ScheduleBackgroundJobs(); // Coravel jobs must be scheduled at startup, otherwise RunOnceAtStart() method won't work
             app.Run();
         }

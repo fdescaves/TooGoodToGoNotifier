@@ -48,7 +48,7 @@ namespace TooGoodToGoNotifier
             });
         }
 
-        public static async void AuthenticateToTooGoodToGoServices(this WebApplication app)
+        public static async Task AuthenticateToTooGoodToGoServices(this WebApplication app)
         {
             try
             {
