@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
-using TooGoodToGoNotifier.Models;
+using TooGoodToGoNotifier.Entities;
 
 namespace TooGoodToGoNotifier.Interfaces
 {

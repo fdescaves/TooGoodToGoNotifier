@@ -7,7 +7,7 @@ using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using TooGoodToGo.Api.Models;
 using TooGoodToGoNotifier.Core;
-using TooGoodToGoNotifier.Dto;
+using TooGoodToGoNotifier.Entities;
 using TooGoodToGoNotifier.Interfaces;
 using TooGoodToGoNotifier.Models;
 
@@ -16,17 +16,17 @@ namespace TooGoodToGoNotifier.Services
     public class BasketService : IBasketService
     {
         private readonly ILogger<BasketService> _logger;
-        private readonly TooGoodToGoNotifierContext _dbContext;
+        private readonly TooGoodToGoNotifierDbContext _dbContext;
         private readonly IMemoryCache _memoryCache;
 
-        public BasketService(ILogger<BasketService> logger, TooGoodToGoNotifierContext dbContext, IMemoryCache memoryCache)
+        public BasketService(ILogger<BasketService> logger, TooGoodToGoNotifierDbContext dbContext, IMemoryCache memoryCache)
         {
             _logger = logger;
             _dbContext = dbContext;
             _memoryCache = memoryCache;
         }
 
-        public async Task<IEnumerable<BasketDto>> GetFavoriteBasketsAsync(string userEmail)
+        public async Task<IEnumerable<Basket>> GetFavoriteBasketsAsync(string userEmail)
         {
             User user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email == userEmail);
 
@@ -39,7 +39,7 @@ namespace TooGoodToGoNotifier.Services
             {
                 var userFavoritedBaskets = baskets
                     .Where(x => user.FavoriteBaskets.Contains(x.Item.ItemId))
-                    .Select(x => new BasketDto
+                    .Select(x => new Basket
                     {
                         BasketId = x.Item.ItemId,
                         Name = x.Item.Name,
@@ -50,10 +50,10 @@ namespace TooGoodToGoNotifier.Services
                 return userFavoritedBaskets;
             }
 
-            return new List<BasketDto>();
+            return new List<Basket>();
         }
 
-        public async Task SetBasketAsFavoriteAsync(string userEmail, string id, bool isFavorite)
+        public async Task UpdateBasketsFavoriteStatusAsync(string userEmail, UpdateBasketsFavoriteStatusRequest request)
         {
             User user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email == userEmail);
 
@@ -62,13 +62,16 @@ namespace TooGoodToGoNotifier.Services
                 throw new Exception("Unknown user");
             }
 
-            if (isFavorite && !user.FavoriteBaskets.Contains(id))
+            foreach (string basketId in request.BasketsIds)
             {
-                user.FavoriteBaskets.Add(id);
-            }
-            else if (!isFavorite)
-            {
-                user.FavoriteBaskets.Remove(id);
+                if (request.SetAsFavorite && !user.FavoriteBaskets.Contains(basketId))
+                {
+                    user.FavoriteBaskets.Add(basketId);
+                }
+                else if (!request.SetAsFavorite)
+                {
+                    user.FavoriteBaskets.Remove(basketId);
+                }
             }
 
             await _dbContext.SaveChangesAsync();

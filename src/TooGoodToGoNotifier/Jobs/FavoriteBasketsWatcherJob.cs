@@ -3,14 +3,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Coravel.Invocable;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using TooGoodToGo.Api.Interfaces;
 using TooGoodToGo.Api.Models;
 using TooGoodToGo.Api.Models.Responses;
-using TooGoodToGoNotifier.Core;
+using TooGoodToGoNotifier.Entities;
 using TooGoodToGoNotifier.Interfaces;
-using TooGoodToGoNotifier.Models;
 
 namespace TooGoodToGoNotifier.Jobs
 {
@@ -21,19 +19,17 @@ namespace TooGoodToGoNotifier.Jobs
         private readonly IEmailService _emailService;
         private readonly IUserService _userService;
         private readonly Context _context;
-        private readonly IMemoryCache _memoryCache;
         private readonly Guid _guid;
         private List<User> _users;
 
         public FavoriteBasketsWatcherJob(ILogger<FavoriteBasketsWatcherJob> logger, ITooGoodToGoService tooGoodToGoService, IEmailService emailService,
-            IUserService userService, Context context, IMemoryCache memoryCache)
+            IUserService userService, Context context)
         {
             _logger = logger;
             _tooGoodToGoService = tooGoodToGoService;
             _emailService = emailService;
             _userService = userService;
             _context = context;
-            _memoryCache = memoryCache;
             _guid = Guid.NewGuid();
         }
 
@@ -43,7 +39,6 @@ namespace TooGoodToGoNotifier.Jobs
 
             _users = await _userService.GetAllUsersAsync();
             GetBasketsResponse getBasketsResponse = await _tooGoodToGoService.GetFavoriteBasketsAsync(_context.AccessToken, _context.TooGoodToGoUserId);
-            _memoryCache.Set(Constants.BASKETS_CACHE_KEY, getBasketsResponse.Items);
 
             var basketsToNotify = new List<TgtgBasket>();
             foreach (TgtgBasket basket in getBasketsResponse.Items)
@@ -80,9 +75,7 @@ namespace TooGoodToGoNotifier.Jobs
             if (recipients.Length > 0)
             {
                 _logger.LogInformation("{basketToNotify} will be notified to: {Recipients}", basket.DisplayName, recipients);
-#if !DEBUG
                 await _emailService.SendEmailAsync("New basket(s)", $"{basket.ItemsAvailable} basket(s) available at \"{basket.DisplayName}\"", recipients);
-#endif
             }
             else
             {

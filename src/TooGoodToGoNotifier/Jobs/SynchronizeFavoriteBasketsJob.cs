@@ -6,19 +6,19 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using TooGoodToGo.Api.Interfaces;
 using TooGoodToGo.Api.Models.Responses;
-using TooGoodToGoNotifier.Models;
+using TooGoodToGoNotifier.Entities;
 
 namespace TooGoodToGoNotifier.Jobs
 {
     public class SynchronizeFavoriteBasketsJob : IInvocable
     {
         private readonly ILogger<SynchronizeFavoriteBasketsJob> _logger;
-        private readonly TooGoodToGoNotifierContext _dbContext;
+        private readonly TooGoodToGoNotifierDbContext _dbContext;
         private readonly ITooGoodToGoService _tooGoodToGoService;
         private readonly Context _context;
         private readonly Guid _guid;
 
-        public SynchronizeFavoriteBasketsJob(ILogger<SynchronizeFavoriteBasketsJob> logger, TooGoodToGoNotifierContext dbContext, ITooGoodToGoService tooGoodToGoService, Context context)
+        public SynchronizeFavoriteBasketsJob(ILogger<SynchronizeFavoriteBasketsJob> logger, TooGoodToGoNotifierDbContext dbContext, ITooGoodToGoService tooGoodToGoService, Context context)
         {
             _logger = logger;
             _dbContext = dbContext;

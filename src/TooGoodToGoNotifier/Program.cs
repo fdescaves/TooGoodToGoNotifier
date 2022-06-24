@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -20,9 +20,9 @@ using Polly.Timeout;
 using TooGoodToGo.Api.Interfaces;
 using TooGoodToGo.Api.Services;
 using TooGoodToGoNotifier.Core.Options;
+using TooGoodToGoNotifier.Entities;
 using TooGoodToGoNotifier.Interfaces;
 using TooGoodToGoNotifier.Jobs;
-using TooGoodToGoNotifier.Models;
 using TooGoodToGoNotifier.Services;
 
 namespace TooGoodToGoNotifier
@@ -78,7 +78,7 @@ namespace TooGoodToGoNotifier
                 string xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 options.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
             })
-            .AddDbContext<TooGoodToGoNotifierContext>(options =>
+            .AddDbContext<TooGoodToGoNotifierDbContext>(options =>
             {
                 options.UseSqlite(configuration.GetConnectionString("TooGoodToGoNotifier"));
             })

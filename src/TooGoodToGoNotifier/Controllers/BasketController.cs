@@ -3,8 +3,8 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-using TooGoodToGoNotifier.Dto;
 using TooGoodToGoNotifier.Interfaces;
+using TooGoodToGoNotifier.Models;
 
 namespace TooGoodToGoNotifier.Controllers
 {
@@ -30,26 +30,25 @@ namespace TooGoodToGoNotifier.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Produces("application/json")]
-        public async Task<ActionResult<IEnumerable<BasketDto>>> GetFavoriteBasketsAsync([FromQuery] string userEmail)
+        public async Task<ActionResult<IEnumerable<Basket>>> GetFavoriteBasketsAsync([FromQuery] string userEmail)
         {
-            IEnumerable<BasketDto> favoriteBaskets = await _basketService.GetFavoriteBasketsAsync(userEmail);
+            IEnumerable<Basket> favoriteBaskets = await _basketService.GetFavoriteBasketsAsync(userEmail);
             return Ok(favoriteBaskets);
         }
 
         /// <summary>
-        /// Set or remove a basket as favorite
+        /// Set or remove baskets as favorite
         /// </summary>
         /// <param name="userEmail"></param>
-        /// <param name="id"></param>
-        /// <param name="isFavorite"></param>
+        /// <param name="request"></param>
         /// <returns></returns>
-        [HttpPatch("favorite/{id}")]
+        [HttpPatch("favorite")]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Produces("application/json")]
-        public async Task<ActionResult> SetBasketAsFavoriteAsync(string id, [FromQuery] string userEmail, [FromQuery] bool isFavorite)
+        public async Task<ActionResult> UpdateBasketsFavoriteStatusAsync([FromQuery] string userEmail, [FromBody] UpdateBasketsFavoriteStatusRequest request)
         {
-            await _basketService.SetBasketAsFavoriteAsync(userEmail, id, isFavorite);
+            await _basketService.UpdateBasketsFavoriteStatusAsync(userEmail, request);
             return Ok();
         }
     }

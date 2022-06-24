@@ -23,6 +23,7 @@ namespace TooGoodToGoNotifier.Services
         {
             _logger.LogInformation("Sending email to {recipients}", string.Join(", ", recipients));
 
+#if !DEBUG
             var message = new MimeMessage();
             message.From.Add(new MailboxAddress(string.Empty, _emailNotifierOptions.SmtpUserName));
 
@@ -47,6 +48,7 @@ namespace TooGoodToGoNotifier.Services
             await client.SendAsync(message);
 
             await client.DisconnectAsync(true);
+#endif
         }
     }
 }

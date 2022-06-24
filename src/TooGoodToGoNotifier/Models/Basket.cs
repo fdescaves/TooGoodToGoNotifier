@@ -1,6 +1,6 @@
-﻿namespace TooGoodToGoNotifier.Dto
+﻿namespace TooGoodToGoNotifier.Models
 {
-    public class BasketDto
+    public class Basket
     {
         public string BasketId { get; set; }
 

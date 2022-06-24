@@ -4,11 +4,11 @@ using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.ChangeTracking;
 
-namespace TooGoodToGoNotifier.Models
+namespace TooGoodToGoNotifier.Entities
 {
-    public class TooGoodToGoNotifierContext : DbContext
+    public class TooGoodToGoNotifierDbContext : DbContext
     {
-        public TooGoodToGoNotifierContext(DbContextOptions<TooGoodToGoNotifierContext> options)
+        public TooGoodToGoNotifierDbContext(DbContextOptions<TooGoodToGoNotifierDbContext> options)
             : base(options)
         {
         }

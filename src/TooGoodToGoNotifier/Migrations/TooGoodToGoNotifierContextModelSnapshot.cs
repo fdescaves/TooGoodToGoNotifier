@@ -3,13 +3,13 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using TooGoodToGoNotifier.Models;
+using TooGoodToGoNotifier.Entities;
 
 #nullable disable
 
 namespace TooGoodToGoNotifier.Migrations
 {
-    [DbContext(typeof(TooGoodToGoNotifierContext))]
+    [DbContext(typeof(TooGoodToGoNotifierDbContext))]
     partial class TooGoodToGoNotifierContextModelSnapshot : ModelSnapshot
     {
         protected override void BuildModel(ModelBuilder modelBuilder)

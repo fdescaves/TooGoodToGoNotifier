@@ -4,13 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
-using TooGoodToGoNotifier.Models;
+using TooGoodToGoNotifier.Entities;
 
 #nullable disable
 
 namespace TooGoodToGoNotifier.Migrations
 {
-    [DbContext(typeof(TooGoodToGoNotifierContext))]
+    [DbContext(typeof(TooGoodToGoNotifierDbContext))]
     [Migration("20220605151730_initial")]
     partial class initial
     {

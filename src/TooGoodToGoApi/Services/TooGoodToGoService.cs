@@ -1,6 +1,7 @@
 ﻿using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
@@ -9,6 +10,7 @@ using TooGoodToGo.Api.Interfaces;
 using TooGoodToGo.Api.Models;
 using TooGoodToGo.Api.Models.Requests;
 using TooGoodToGo.Api.Models.Responses;
+using TooGoodToGoNotifier.Core;
 using TooGoodToGoNotifier.Core.Options;
 
 namespace TooGoodToGo.Api.Services
@@ -19,12 +21,14 @@ namespace TooGoodToGo.Api.Services
         private readonly TooGoodToGoApiOptions _apiOptions;
         private readonly HttpClient _httpClient;
         private readonly JsonSerializerSettings _jsonSerializerSettings;
+        private readonly IMemoryCache _memoryCache;
 
-        public TooGoodToGoService(ILogger<TooGoodToGoService> logger, IOptions<TooGoodToGoApiOptions> apiOptions, HttpClient httpClient)
+        public TooGoodToGoService(ILogger<TooGoodToGoService> logger, IOptions<TooGoodToGoApiOptions> apiOptions, HttpClient httpClient, IMemoryCache memoryCache)
         {
             _logger = logger;
             _apiOptions = apiOptions.Value;
             _httpClient = httpClient;
+            _memoryCache = memoryCache;
             _jsonSerializerSettings = new JsonSerializerSettings
             {
                 ContractResolver = new DefaultContractResolver
@@ -58,6 +62,8 @@ namespace TooGoodToGo.Api.Services
             SerializeHttpRequestContentAsJson(request, getFavoriteBasketsRequest);
 
             GetBasketsResponse getBasketsResponse = await ExecuteAndThrowIfNotSuccessfulAsync<GetBasketsResponse>(request);
+
+            _memoryCache.Set(Constants.BASKETS_CACHE_KEY, getBasketsResponse.Items);
 
             return getBasketsResponse;
         }

@@ -8,9 +8,9 @@ using Moq;
 using TooGoodToGo.Api.Interfaces;
 using TooGoodToGo.Api.Models;
 using TooGoodToGo.Api.Models.Responses;
+using TooGoodToGoNotifier.Entities;
 using TooGoodToGoNotifier.Interfaces;
 using TooGoodToGoNotifier.Jobs;
-using TooGoodToGoNotifier.Models;
 using Xunit;
 
 namespace TooGoodToGoNotifier.Tests
@@ -55,15 +55,8 @@ namespace TooGoodToGoNotifier.Tests
                 TooGoodToGoUserId = 1
             };
 
-
-            // Using a real instance of IMemoryCache is easier than mocking it
-            var services = new ServiceCollection();
-            services.AddMemoryCache();
-            ServiceProvider serviceProvider = services.BuildServiceProvider();
-            _memoryCache = serviceProvider.GetService<IMemoryCache>();
-
             _favoriteBasketsWatcherJob = new FavoriteBasketsWatcherJob(_loggerMock.Object, _tooGoodToGoServiceMock.Object, _emailServiceMock.Object,
-                _userServiceMock.Object, _context, _memoryCache);
+                _userServiceMock.Object, _context);
         }
 
         [Theory]
