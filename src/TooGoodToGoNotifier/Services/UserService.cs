@@ -18,9 +18,9 @@ namespace TooGoodToGoNotifier.Services
             _dbContext = dbContext;
         }
 
-        public Task<List<User>> GetAllUsersAsync()
+        public async Task<List<User>> GetAllUsersAsync()
         {
-            return _dbContext.Users.ToListAsync();
+            return await _dbContext.Users.ToListAsync();
         }
     }
 }

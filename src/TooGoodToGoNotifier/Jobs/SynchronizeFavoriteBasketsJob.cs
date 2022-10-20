@@ -4,8 +4,10 @@ using System.Threading.Tasks;
 using Coravel.Invocable;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using TooGoodToGo.Api.Interfaces;
 using TooGoodToGo.Api.Models.Responses;
+using TooGoodToGoNotifier.Core.Options;
 using TooGoodToGoNotifier.Entities;
 
 namespace TooGoodToGoNotifier.Jobs
@@ -16,14 +18,16 @@ namespace TooGoodToGoNotifier.Jobs
         private readonly TooGoodToGoNotifierDbContext _dbContext;
         private readonly ITooGoodToGoService _tooGoodToGoService;
         private readonly Context _context;
+        private readonly NotifierOptions _options;
         private readonly Guid _guid;
 
-        public SynchronizeFavoriteBasketsJob(ILogger<SynchronizeFavoriteBasketsJob> logger, TooGoodToGoNotifierDbContext dbContext, ITooGoodToGoService tooGoodToGoService, Context context)
+        public SynchronizeFavoriteBasketsJob(ILogger<SynchronizeFavoriteBasketsJob> logger, TooGoodToGoNotifierDbContext dbContext, ITooGoodToGoService tooGoodToGoService, Context context, IOptions<NotifierOptions> options)
         {
             _logger = logger;
             _dbContext = dbContext;
             _tooGoodToGoService = tooGoodToGoService;
             _context = context;
+            _options = options.Value;
             _guid = Guid.NewGuid();
         }
 
@@ -60,7 +64,7 @@ namespace TooGoodToGoNotifier.Jobs
             {
                 _logger.LogInformation("Removing from favorite basket with Id '{basketId}'", basketId);
                 await _tooGoodToGoService.SetFavoriteAsync(_context.AccessToken, basketId, true);
-                await Task.Delay(1000);
+                await Task.Delay(_options.ThrottleInterval);
             }
         }
 
@@ -74,7 +78,7 @@ namespace TooGoodToGoNotifier.Jobs
             {
                 _logger.LogInformation("Adding as favorite basket with Id '{basketId}'", basketId);
                 await _tooGoodToGoService.SetFavoriteAsync(_context.AccessToken, basketId, false);
-                await Task.Delay(1000);
+                await Task.Delay(_options.ThrottleInterval);
             }
         }
     }

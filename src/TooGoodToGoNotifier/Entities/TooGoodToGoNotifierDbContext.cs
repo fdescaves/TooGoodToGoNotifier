@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
+using System.Text.Json;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 
 namespace TooGoodToGoNotifier.Entities
 {
@@ -24,12 +22,8 @@ namespace TooGoodToGoNotifier.Entities
             modelBuilder.Entity<User>()
                 .Property(x => x.FavoriteBaskets)
                 .HasConversion(
-                    x => string.Join(',', x),
-                    x => x.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList(),
-                    new ValueComparer<List<string>>(
-                        (c1, c2) => c1.SequenceEqual(c2),
-                        c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                        c => c.ToList())
+                    x => JsonSerializer.Serialize(x, new JsonSerializerOptions()),
+                    x => JsonSerializer.Deserialize<List<string>>(x, new JsonSerializerOptions())
                 );
         }
     }

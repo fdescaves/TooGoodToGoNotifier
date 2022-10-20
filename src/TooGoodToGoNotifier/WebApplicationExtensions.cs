@@ -28,7 +28,7 @@ namespace TooGoodToGoNotifier
 
                 // Scheduling job to watch for available baskets
                 scheduler.Schedule<FavoriteBasketsWatcherJob>()
-                .EverySeconds(notifierOptions.ScanningInterval)
+                .EverySeconds(notifierOptions.ThrottleInterval)
                 .RunOnceAtStart()
                 .When(() => CurrentTimeIsBetweenConfiguredRangeAsync(notifierOptions))
                 .Zoned(TimeZoneInfo.Local)

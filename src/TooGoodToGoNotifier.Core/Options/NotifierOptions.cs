@@ -4,7 +4,7 @@ namespace TooGoodToGoNotifier.Core.Options
 {
     public class NotifierOptions
     {
-        public int ScanningInterval { get; set; }
+        public int ThrottleInterval { get; set; }
 
         public string RefreshAccessTokenCronExpression { get; set; }
 
