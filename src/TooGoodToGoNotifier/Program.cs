@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -80,7 +80,7 @@ namespace TooGoodToGoNotifier
             })
             .AddDbContext<TooGoodToGoNotifierDbContext>(options =>
             {
-                options.UseSqlServer(configuration.GetConnectionString("TooGoodToGoNotifier"));
+                options.UseSqlite(configuration.GetConnectionString("TooGoodToGoNotifier"));
             })
             .AddScheduler()
             .AddMemoryCache()
