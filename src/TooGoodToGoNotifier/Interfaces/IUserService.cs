@@ -6,6 +6,8 @@ namespace TooGoodToGoNotifier.Interfaces
 {
     public interface IUserService
     {
-        Task<List<User>> GetAllUsersAsync();
+        public Task<List<User>> GetAllUsersAsync();
+
+        public Task CreateUserAsync(string email);
     }
 }

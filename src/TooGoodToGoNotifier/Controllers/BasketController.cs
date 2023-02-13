@@ -46,9 +46,9 @@ namespace TooGoodToGoNotifier.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         [Produces("application/json")]
-        public async Task<ActionResult> UpdateBasketsFavoriteStatusAsync([FromQuery] string userEmail, [FromBody] UpdateBasketsFavoriteStatusRequest request)
+        public async Task<IActionResult> UpdateBasketsFavoriteStatusAsync([FromQuery] string userEmail, [FromBody] UpdateBasketsFavoriteStatusRequest request)
         {
-            await _basketService.UpdateBasketsFavoriteStatusAsync(userEmail, request);
+            await _basketService.UpdateBasketsFavoriteStatusAsync(userEmail, request.BasketsIds, request.SetAsFavorite);
             return Ok();
         }
     }

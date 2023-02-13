@@ -22,5 +22,18 @@ namespace TooGoodToGoNotifier.Services
         {
             return await _dbContext.Users.ToListAsync();
         }
+
+        public async Task CreateUserAsync(string email)
+        {
+            var user = new User
+            {
+                Email = email,
+                FavoriteBaskets = new List<string>()
+            };
+
+            _dbContext.Users.Add(user);
+
+            await _dbContext.SaveChangesAsync();
+        }
     }
 }

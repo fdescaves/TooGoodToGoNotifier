@@ -6,8 +6,8 @@ namespace TooGoodToGoNotifier.Interfaces
 {
     public interface IBasketService
     {
-        Task<IEnumerable<Basket>> GetFavoriteBasketsAsync(string userEmail);
+        Task<IEnumerable<Basket>> GetFavoriteBasketsAsync(string email);
 
-        Task UpdateBasketsFavoriteStatusAsync(string userEmail, UpdateBasketsFavoriteStatusRequest request);
+        Task UpdateBasketsFavoriteStatusAsync(string email, string[] basketIds, bool setAsFavorite);
     }
 }

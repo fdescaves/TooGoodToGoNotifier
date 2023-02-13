@@ -26,9 +26,9 @@ namespace TooGoodToGoNotifier.Services
             _memoryCache = memoryCache;
         }
 
-        public async Task<IEnumerable<Basket>> GetFavoriteBasketsAsync(string userEmail)
+        public async Task<IEnumerable<Basket>> GetFavoriteBasketsAsync(string email)
         {
-            User user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email == userEmail);
+            User user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email == email);
 
             if (user == null)
             {
@@ -53,22 +53,22 @@ namespace TooGoodToGoNotifier.Services
             return new List<Basket>();
         }
 
-        public async Task UpdateBasketsFavoriteStatusAsync(string userEmail, UpdateBasketsFavoriteStatusRequest request)
+        public async Task UpdateBasketsFavoriteStatusAsync(string email, string[] basketIds, bool setAsFavorite)
         {
-            User user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email == userEmail);
+            User user = await _dbContext.Users.FirstOrDefaultAsync(x => x.Email == email);
 
             if (user == null)
             {
                 throw new Exception("Unknown user");
             }
 
-            foreach (string basketId in request.BasketsIds)
+            foreach (string basketId in basketIds)
             {
-                if (request.SetAsFavorite && !user.FavoriteBaskets.Contains(basketId))
+                if (setAsFavorite && !user.FavoriteBaskets.Contains(basketId))
                 {
                     user.FavoriteBaskets.Add(basketId);
                 }
-                else if (!request.SetAsFavorite)
+                else if (!setAsFavorite)
                 {
                     user.FavoriteBaskets.Remove(basketId);
                 }
