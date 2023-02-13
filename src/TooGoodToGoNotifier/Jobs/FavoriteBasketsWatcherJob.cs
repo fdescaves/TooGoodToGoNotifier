@@ -75,11 +75,11 @@ namespace TooGoodToGoNotifier.Jobs
             if (recipients.Length > 0)
             {
                 _logger.LogInformation("{basketToNotify} will be notified to: {Recipients}", basket.DisplayName, recipients);
-                await _emailService.SendEmailAsync("New basket(s)", $"{basket.ItemsAvailable} basket(s) available at \"{basket.DisplayName}\"", recipients);
+                await _emailService.SendEmailAsync($"Panier(s) disponible(s) à {basket.DisplayName}", $"https://share.toogoodtogo.com/item/{basket.Item.ItemId}/", recipients);
             }
             else
             {
-                _logger.LogWarning("Default recipients aren't configured, {basketToNotifyId} - {basketDisplayName} won't be notified", basket.Item.ItemId, basket.DisplayName);
+                _logger.LogWarning("There are no recipients configured, {basketToNotifyId} - {basketDisplayName} won't be notified", basket.Item.ItemId, basket.DisplayName);
             }
         }
     }

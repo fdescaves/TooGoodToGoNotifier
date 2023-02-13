@@ -62,7 +62,7 @@ namespace TooGoodToGoNotifier.Jobs
 
             foreach (string basketId in basketsToAdd)
             {
-                _logger.LogInformation("Removing from favorite basket with Id '{basketId}'", basketId);
+                _logger.LogInformation("Adding as favorite basket '{basketId}'", basketId);
                 await _tooGoodToGoService.SetFavoriteAsync(_context.AccessToken, basketId, true);
                 await Task.Delay(_options.ThrottleInterval);
             }
@@ -76,7 +76,7 @@ namespace TooGoodToGoNotifier.Jobs
 
             foreach (string basketId in basketsToRemove)
             {
-                _logger.LogInformation("Adding as favorite basket with Id '{basketId}'", basketId);
+                _logger.LogInformation("Removing from favorite basket '{basketId}'", basketId);
                 await _tooGoodToGoService.SetFavoriteAsync(_context.AccessToken, basketId, false);
                 await Task.Delay(_options.ThrottleInterval);
             }
