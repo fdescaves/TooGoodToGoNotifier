@@ -1,11 +1,23 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31112.23
+# Visual Studio Version 17
+VisualStudioVersion = 17.2.32505.173
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TooGoodToGoNotifier", "src\TooGoodToGoNotifier.csproj", "{D8BCC3AA-0364-4430-B624-0AA74026768E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TooGoodToGoNotifier", "src\TooGoodToGoNotifier\TooGoodToGoNotifier.csproj", "{D8BCC3AA-0364-4430-B624-0AA74026768E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TooGoodToGoNotifier.Tests", "tests\TooGoodToGoNotifier.Tests.csproj", "{026A5765-B085-4C3A-883B-9045B7E5C212}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TooGoodToGoNotifier.Tests", "tests\TooGoodToGoNotifier.Tests\TooGoodToGoNotifier.Tests.csproj", "{026A5765-B085-4C3A-883B-9045B7E5C212}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TooGoodToGo.Api", "src\TooGoodToGoApi\TooGoodToGo.Api.csproj", "{10811DD8-DA56-471F-B86A-8AAFE417D4E4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TooGoodToGoNotifier.Core", "src\TooGoodToGoNotifier.Core\TooGoodToGoNotifier.Core.csproj", "{2A591AED-A021-4513-A3D2-F92496FA09F7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{B9C293E3-F913-4A17-83A0-B2AA65EFEAA3}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+		.gitattributes = .gitattributes
+		.gitignore = .gitignore
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +33,14 @@ Global
 		{026A5765-B085-4C3A-883B-9045B7E5C212}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{026A5765-B085-4C3A-883B-9045B7E5C212}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{026A5765-B085-4C3A-883B-9045B7E5C212}.Release|Any CPU.Build.0 = Release|Any CPU
+		{10811DD8-DA56-471F-B86A-8AAFE417D4E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{10811DD8-DA56-471F-B86A-8AAFE417D4E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{10811DD8-DA56-471F-B86A-8AAFE417D4E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{10811DD8-DA56-471F-B86A-8AAFE417D4E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2A591AED-A021-4513-A3D2-F92496FA09F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2A591AED-A021-4513-A3D2-F92496FA09F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2A591AED-A021-4513-A3D2-F92496FA09F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2A591AED-A021-4513-A3D2-F92496FA09F7}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -1,18 +1,19 @@
 # TooGoodToGoNotifier
 
-TooGoodToGoNotifier is a .NET 6 console application that send email notifications when any of your favourite baskets are available in the TooGoodToGo mobile app. The idea was to overcome the lack of notification functionality when a basket is available. This application is designed to be used on a device that is constantly running in order to avoid the tedious authentication procedure that requires human interaction.
+TooGoodToGoNotifier is a .NET 7 web api application that send email notifications when any of your or any of your friends favourite baskets are available in the TooGoodToGo mobile application. This project started when I saw the lack of notification functionality when a basket is available in the official application.
+The new README is in progress, please see the `console-version` branch to use the old version that was a simple console application without any database requirement and with a complete documentation.
 
-## Prerequisites
+## [WIP] Prerequisites
 
 - a TooGoodToGo account
 - an email account that will be used to send notifications
-- .NET 6 runtime unless a self-contained release is used
+- .NET 7 runtime unless a self-contained release is used
 
-## Configuration
+## [WIP] Configuration
 
 - Open the TooGoodToGo application and mark as favorite every basket that you wish to receive notifications
 
-- Open the [appsettings.json](src/appsettings.json) configuration file of TooGoodToGoNotifier
+- Open the [appsettings.json](src/TooGoodToGoNotifier/appsettings.json) configuration file of TooGoodToGoNotifier
 
 - Configure your TooGoodToGo account's email
 
@@ -71,7 +72,7 @@ TooGoodToGoNotifier can also be used with multiple users using the `SubscribedBa
   }
 ```
 
-## How it works
+## [WIP] How it works
 
 At startup TooGoodToGoNotifier must authenticate to the TooGoodToGo services using your credentials. Since TooGoodToGo use a passwordless authentication, you will receive an email from them in your inbox and you must navigate to the given link in a browser. **DO NOT** click the link directly on your phone with the TooGoodToGo app installed otherwise the authentication will fail.
 Once the application is authenticated, it will check for available favourite baskets every 20 seconds by default. If a favourite basket is seen as available, an email notification will be sent to every configured recipient. Once a basket has been notified, it won't be notified again unless it's seen as out of stock.
